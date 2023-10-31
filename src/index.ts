@@ -32,4 +32,33 @@ app.onError((e, c) => {
 
 export default {
 	fetch: app.fetch,
+
+	async queue(batch: MessageBatch<any>, env: Bindings, ctx: ExecutionContext): Promise<void> {
+		// wait till all messages are processed
+		ctx.waitUntil(
+			// Promise.all returns a promise that resolves when all of the promises in the iterable argument have resolved
+			Promise.all(
+				batch.messages.map((msg) => {
+					// returns a promise that always resolves
+					return new Promise((resolve) => {
+						const actionName = 'queue-' + batch.queue;
+						const fn = getActionHandler(actionName);
+						if (!fn) {
+							console.log('queue: no action matched for: ' + actionName);
+							msg.retry();
+							resolve({});
+							return;
+						}
+						fn({ env, ctx }, msg.body)
+							.then(() => msg.ack())
+							.catch((e) => {
+								console.log(`queue: action failed: ${e}`);
+								msg.retry();
+							})
+							.finally(() => resolve({}));
+					});
+				})
+			)
+		);
+	},
 };

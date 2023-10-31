@@ -1,6 +1,12 @@
 import { ActionHandler } from '../types';
+import { vectorize_sentence } from './vectorize';
 
-const ACTIONS = {};
+const ACTIONS = {
+	vectorize_sentence,
+
+	// queues
+	'queue-mallam-vectorize-sentence': vectorize_sentence,
+};
 
 /**
  * get a action handler by name
