@@ -2,6 +2,18 @@ name = "mallam-backend"
 main = "src/index.ts"
 compatibility_date = "2023-10-25"
 
+[ai]
+binding = "AI"
+
+[[d1_databases]]
+binding = "DB_DATASETS"
+database_name = "mallam-datasets"
+database_id = "1fdbbadc-27c4-4fee-88d7-9d6d930c3f49"
+
+[[vectorize]]
+binding = "VEC_DATASETS"
+index_name = "mallam-datasets"
+
 # Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables

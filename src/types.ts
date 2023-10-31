@@ -1,5 +1,10 @@
 export type Bindings = {
 	SECRET_KEY: string;
+
+	AI: any;
+
+	VEC_DATASETS: VectorizeIndex;
+	DB_DATASETS: D1Database;
 };
 
 export type ActionRequest = {
