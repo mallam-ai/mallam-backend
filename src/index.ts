@@ -1,32 +1,35 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Hono } from 'hono';
+import { Bindings } from './types';
+import { Halt, halt } from './utils';
+import { getActionHandler } from './actions';
 
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
-}
+const app = new Hono<{ Bindings: Bindings }>();
+
+// app route - /invoke/:action
+app.post('/invoke/:action', async (c) => {
+	const action = c.req.param('action');
+	if (!action) {
+		halt('/invoke/:action: action is required');
+	}
+
+	const fn = getActionHandler(action);
+	if (!fn) {
+		halt(`/invoke/:action: action '${action}' is not found`);
+	}
+
+	const args = await c.req.json();
+
+	return c.json(await fn({ env: c.env, ctx: c.executionCtx }, args));
+});
+
+// app error handler
+app.onError((e, c) => {
+	if (e instanceof Halt) {
+		return c.json({ error: e.error }, e.code);
+	}
+	return c.json({ error: `${e}` }, 500);
+});
 
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
+	fetch: app.fetch,
 };
