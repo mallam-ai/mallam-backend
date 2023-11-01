@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "f7518163-670b-490f-b751-0278a6ebd763",
+  "id": "91217e6e-d214-44a2-93df-9ac4bf943290",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "documents": {
@@ -14,15 +14,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "vendor": {
-          "name": "vendor",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "author": {
-          "name": "author",
+        "repo": {
+          "name": "repo",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -51,17 +44,10 @@
         }
       },
       "indexes": {
-        "idx_documents_vendor": {
-          "name": "idx_documents_vendor",
+        "idx_documents_repo": {
+          "name": "idx_documents_repo",
           "columns": [
-            "vendor"
-          ],
-          "isUnique": false
-        },
-        "idx_documents_author": {
-          "name": "idx_documents_author",
-          "columns": [
-            "author"
+            "repo"
           ],
           "isUnique": false
         },
@@ -87,6 +73,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "repo": {
+          "name": "repo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "position": {
           "name": "position",
           "type": "integer",
@@ -107,13 +100,21 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         }
       },
       "indexes": {
-        "idx_sentences_position": {
-          "name": "idx_sentences_position",
+        "idx_sentences_repo": {
+          "name": "idx_sentences_repo",
           "columns": [
-            "position"
+            "repo"
           ],
           "isUnique": false
         },
@@ -121,6 +122,20 @@
           "name": "idx_sentences_document_id",
           "columns": [
             "document_id"
+          ],
+          "isUnique": false
+        },
+        "idx_sentences_position": {
+          "name": "idx_sentences_position",
+          "columns": [
+            "position"
+          ],
+          "isUnique": false
+        },
+        "idx_sentences_status": {
+          "name": "idx_sentences_status",
+          "columns": [
+            "status"
           ],
           "isUnique": false
         }

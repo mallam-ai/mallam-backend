@@ -3,11 +3,11 @@ import { drizzle } from 'drizzle-orm/d1';
 import { tDocuments, tSentences } from '../../schema';
 import { eq } from 'drizzle-orm';
 import { Ai } from '@cloudflare/ai';
+import { chunk } from 'lodash';
 
 type DocumentPayload = {
 	id: string
-	author: string
-	vendor: string
+	repo: string
 	url: string
 	title: string
 	content: string
@@ -16,32 +16,41 @@ type DocumentPayload = {
 
 export const datasets_document_upsert: ActionHandler = async (
 	{ env },
-	{ id, author, vendor, url, title, content, sentences }: DocumentPayload
+	{ id, repo, url, title, content, sentences: _sentences }: DocumentPayload
 ) => {
 	const db = drizzle(env.DB_DATASETS);
+
 	// upsert document
 	await db.insert(tDocuments).values({
-		id, author, vendor, url, title, content
+		id, repo, url, title, content
 	}).onConflictDoUpdate({
 		target: tDocuments.id,
-		set: { author, vendor, url, title, content }
+		set: { repo, url, title, content }
 	});
+
 	// delete old sentences
 	await db.delete(tSentences).where(eq(tSentences.documentId, id));
-	// insert new sentences
-	await db.insert(tSentences).values(
-		sentences.map((sentence, position) => ({
-			id: `${id}-${position}`,
-			documentId: id,
-			position: position,
-			content: sentence
-		}))
-	);
-	// invoke vectorize action
-	const sentenceIds = sentences.map((_, position) => `${id}-${position}`);
 
-	await env.QUEUE_DATASETS_VECTORIZE_SENTENCE_UPSERT.sendBatch(
-		sentenceIds.map(sentenceId => ({ body: { sentenceId }, contentType: 'json' }))
+	// prepare sentences
+	const sentences = _sentences.map((sentence, position) => ({
+		id: `${id}-${position}`,
+		repo,
+		documentId: id,
+		position: position,
+		content: sentence,
+		status: 0
+	}));
+
+	// insert sentences
+	await Promise.all(
+		chunk(sentences, 10).map(sentences => db.insert(tSentences).values(sentences))
+	);
+
+	// invoke vectorize action
+	await Promise.all(
+		chunk(sentences, 10).map(sentences => env.QUEUE_DATASETS_VECTORIZE_SENTENCE_UPSERT.sendBatch(
+			sentences.map(record => ({ body: { sentenceId: record.id }, contentType: 'json' }))
+		))
 	);
 
 	return {
@@ -49,7 +58,7 @@ export const datasets_document_upsert: ActionHandler = async (
 		document: {
 			id
 		},
-		sentences: sentenceIds.map(sentenceId => ({ id: sentenceId }))
+		sentences: sentences.map(({ id }) => ({ id }))
 	};
 };
 
@@ -80,8 +89,15 @@ export const datasets_vectorize_sentence_upsert: ActionHandler = async ({ env },
 		id: sentenceId,
 		values,
 		metadata: {
+			repo: sentence.repo,
 			documentId: sentence.documentId,
 			position: sentence.position
 		}
 	}]);
+	// update status
+	await db.update(tSentences).set({
+		status: 1
+	}).where(eq(tSentences.id, sentenceId));
+
+	return { success: true };
 };

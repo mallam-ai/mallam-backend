@@ -5,10 +5,8 @@ export const tDocuments = sqliteTable(
 	{
 		// unique id for document
 		id: text('id').primaryKey(),
-		// vendor for document, ['marxists.org']
-		vendor: text('vendor').notNull(),
-		// author for document, ['marx']
-		author: text('author').notNull(),
+		// repo name
+		repo: text('repo').notNull(),
 		// url of document
 		url: text('url').notNull(),
 		// title of document
@@ -17,8 +15,7 @@ export const tDocuments = sqliteTable(
 		content: text('content').notNull()
 	},
 	(documents) => ({
-		idx_vendor: index('idx_documents_vendor').on(documents.vendor),
-		idx_author: index('idx_documents_author').on(documents.author),
+		idx_repo: index('idx_documents_repo').on(documents.repo),
 		idx_url: index('idx_documents_url').on(documents.url)
 	})
 );
@@ -28,6 +25,8 @@ export const tSentences = sqliteTable(
 	{
 		// unique id for sentence
 		id: text('id').primaryKey(),
+		// repo name
+		repo: text('repo').notNull(),
 		// index of sentence in document, starting from 0
 		position: integer('position').notNull(),
 		// document id
@@ -35,10 +34,14 @@ export const tSentences = sqliteTable(
 			.notNull()
 			.references(() => tDocuments.id),
 		// content of sentences
-		content: text('content').notNull()
+		content: text('content').notNull(),
+		// status of vectorize
+		status: integer('status').notNull().default(0)
 	},
 	(sentences) => ({
+		idx_repo: index('idx_sentences_repo').on(sentences.repo),
+		idx_document_id: index('idx_sentences_document_id').on(sentences.documentId),
 		idx_position: index('idx_sentences_position').on(sentences.position),
-		idx_document_id: index('idx_sentences_document_id').on(sentences.documentId)
+		idx_status: index('idx_sentences_status').on(sentences.status)
 	})
 );
