@@ -1,11 +1,11 @@
 import { ActionHandler } from '../types';
-import { datasets_document_upsert, datasets_vectorize_sentence_upsert } from './datasets';
+import { datasets_document_upsert, datasets_vectorize_sentences_upsert } from './datasets';
 
 const ACTIONS = {
 	datasets_document_upsert,
-	datasets_vectorize_sentence_upsert,
+	datasets_vectorize_sentences_upsert,
 	// queues
-	'queue-mallam-datasets-vectorize-sentence-upsert': datasets_vectorize_sentence_upsert
+	'queue-mallam-datasets-vectorize-sentences-upsert': datasets_vectorize_sentences_upsert
 };
 
 /**

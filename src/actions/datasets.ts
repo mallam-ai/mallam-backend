@@ -48,7 +48,7 @@ export const datasets_document_upsert: ActionHandler = async (
 
 	// invoke vectorize action
 	await Promise.all(
-		chunk(sentences, 10).map(sentences => env.QUEUE_DATASETS_VECTORIZE_SENTENCE_UPSERT.sendBatch(
+		chunk(sentences, 10).map(sentences => env.QUEUE_DATASETS_VECTORIZE_SENTENCES_UPSERT.sendBatch(
 			sentences.map(record => ({ body: { sentenceId: record.id }, contentType: 'json' }))
 		))
 	);
@@ -64,7 +64,7 @@ export const datasets_document_upsert: ActionHandler = async (
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
-export const datasets_vectorize_sentence_upsert: ActionHandler = async ({ env }, { sentenceId }) => {
+export const datasets_vectorize_sentences_upsert: ActionHandler = async ({ env }, { sentenceId }) => {
 	const db = drizzle(env.DB_DATASETS, { schema: { tDocuments, tSentences } });
 	// fetch sentence
 	const sentence = await db.query.tSentences.findFirst({
