@@ -6,8 +6,10 @@ import {
 } from './datasets';
 
 import { chat } from './chat';
+import { ping } from './ping';
 
 const ACTIONS = {
+	ping,
 	datasets_document_upsert,
 	datasets_vectorize_sentences_upsert,
 	datasets_vectorize_sentences_retrieve,
