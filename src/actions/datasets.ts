@@ -1,9 +1,11 @@
 import { ActionHandler } from '../types';
 import { drizzle } from 'drizzle-orm/d1';
 import { tDocuments, tSentences } from '../../schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { Ai } from '@cloudflare/ai';
-import { chunk } from 'lodash';
+import { chunk, groupBy } from 'lodash';
+
+const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
 type DocumentPayload = {
 	id: string
@@ -62,7 +64,6 @@ export const datasets_document_upsert: ActionHandler = async (
 	};
 };
 
-const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
 export const datasets_vectorize_sentences_upsert: ActionHandler = async ({ env }, { sentenceId }) => {
 	const db = drizzle(env.DB_DATASETS, { schema: { tDocuments, tSentences } });
@@ -100,4 +101,56 @@ export const datasets_vectorize_sentences_upsert: ActionHandler = async ({ env }
 	}).where(eq(tSentences.id, sentenceId));
 
 	return { success: true };
+};
+
+
+const RETRIEVE_SIMILARITY_CUTOFF = 0.75;
+const RETRIEVE_TOP_K = 2;
+const RETRIEVE_CONTEXT_SIZE = 2;
+
+export const datasets_vectorize_sentences_retrieve: ActionHandler = async ({ env }, { text }) => {
+	const ai = new Ai(env.AI);
+	const db = drizzle(env.DB_DATASETS, { schema: { tDocuments, tSentences } });
+
+	// create vectors from input
+	const { data } = await ai.run(MODEL_EMBEDDINGS, { text: [text] });
+	const values = data[0];
+	// query vectorize
+	const vectorQuery = await env.VECTORIZE_DATASETS_SENTENCES.query(values, { topK: RETRIEVE_TOP_K });
+	// build query range
+
+	const sentencesIds = vectorQuery.matches
+		.filter(vec => vec.score > RETRIEVE_SIMILARITY_CUTOFF)
+		.map(vec => vec.vectorId);
+
+	if (!sentencesIds.length) {
+		return [];
+	}
+
+	const sentences = await db.query.tSentences.findMany({
+		where: inArray(tSentences.id, sentencesIds)
+	});
+
+	const sentenceGroups = groupBy(sentences, 'documentId');
+
+	const results = [];
+
+	for (const documentId of Object.keys(sentenceGroups)) {
+		const document = await db.query.tDocuments.findFirst({ where: eq(tDocuments.id, documentId) });
+		const sentences = await db.query.tSentences.findMany({
+			where: and(
+				eq(tSentences.documentId, documentId),
+				or(
+					...
+						sentenceGroups[documentId].map(record => and(
+							gte(tSentences.position, record.position - RETRIEVE_CONTEXT_SIZE),
+							lte(tSentences.position, record.position + RETRIEVE_CONTEXT_SIZE)
+						))
+				)
+			)
+		});
+		results.push({ document, sentences: sentences });
+	}
+
+	return results;
 };
