@@ -11,13 +11,13 @@ database_name = "mallam-datasets"
 database_id = "1fdbbadc-27c4-4fee-88d7-9d6d930c3f49"
 
 [[queues.producers]]
-binding = "QUEUE_VECTORIZE_SENTENCE"
-queue = "mallam-vectorize-sentence"
+binding = "QUEUE_DATASETS_VECTORIZE_SENTENCE_UPSERT"
+queue = "mallam-datasets-vectorize-sentence-upsert"
 
 [[queues.consumers]]
-queue = "mallam-vectorize-sentence"
+queue = "mallam-datasets-vectorize-sentence-upsert"
 
 
 [[vectorize]]
-binding = "VECTORIZE_DATASETS"
-index_name = "mallam-datasets"
+binding = "VECTORIZE_DATASETS_SENTENCES"
+index_name = "mallam-datasets-sentences"

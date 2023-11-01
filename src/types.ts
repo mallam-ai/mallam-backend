@@ -3,9 +3,9 @@ export type Bindings = {
 
 	AI: any;
 
-	VECTORIZE_DATASETS: VectorizeIndex;
+	VECTORIZE_DATASETS_SENTENCES: VectorizeIndex;
 
-	QUEUE_VECTORIZE_SENTENCE: Queue;
+	QUEUE_DATASETS_VECTORIZE_SENTENCE_UPSERT: Queue;
 
 	DB_DATASETS: D1Database;
 };

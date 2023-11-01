@@ -1,5 +1,5 @@
 CREATE TABLE `documents` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`vendor` text NOT NULL,
 	`author` text NOT NULL,
 	`url` text NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE `documents` (
 );
 --> statement-breakpoint
 CREATE TABLE `sentences` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`id` text PRIMARY KEY NOT NULL,
 	`position` integer NOT NULL,
 	`document_id` text NOT NULL,
 	`content` text NOT NULL,
