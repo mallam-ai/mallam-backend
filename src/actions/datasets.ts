@@ -38,14 +38,19 @@ export const datasets_document_upsert: ActionHandler = async (
 		}))
 	);
 	// invoke vectorize action
+	const sentenceIds = sentences.map((_, position) => `${id}-${position}`);
+
 	await env.QUEUE_DATASETS_VECTORIZE_SENTENCE_UPSERT.sendBatch(
-		sentences.map((sentence, position) => ({
-			body: {
-				sentenceId: `${id}-${position}`
-			},
-			contentType: 'json'
-		}))
+		sentenceIds.map(sentenceId => ({ body: { sentenceId }, contentType: 'json' }))
 	);
+
+	return {
+		success: true,
+		document: {
+			id
+		},
+		sentences: sentenceIds.map(sentenceId => ({ id: sentenceId }))
+	};
 };
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
