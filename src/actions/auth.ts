@@ -1,7 +1,10 @@
-import { ActionHandler } from '../types';
-import { encodeQuery, halt, randomHex } from '../utils';
+import { ActionHandler, emptyUser, TokenPayload, User, USER_AGENT, userFromTokenPayload } from '../types';
+import { decodeJWT, encodeJWT, encodeQuery, halt, randomHex, sha1Short } from '../utils';
 
-export const oauth_create_authorization_uri: ActionHandler = async function({ env }, { redirect_uri }) {
+export const oauth_create_authorization_uri: ActionHandler = async function({ env }, { redirect_uri, vendor }) {
+	if (vendor !== 'github') {
+		halt(`invalid vendor: ${vendor}`);
+	}
 	return {
 		url:
 			'https://github.com/login/oauth/authorize?' +
@@ -14,8 +17,6 @@ export const oauth_create_authorization_uri: ActionHandler = async function({ en
 	};
 };
 
-
-export const USER_AGENT = 'cloudflare-workers/mallam-backend';
 
 async function githubAuthorizeUser({
 																		 redirect_uri,
@@ -66,3 +67,54 @@ async function githubAuthorizeUser({
 	}
 	return await res.json() as { id: number; login: string };
 }
+
+async function createUserToken({ user, user_agent, secret_key }: {
+	user: User;
+	user_agent: string;
+	secret_key: string
+}): Promise<string> {
+	const data: TokenPayload = {
+		sub: user.id,
+		name: user.name,
+		iat: Math.floor(Date.now() / 1000),
+		exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3,
+		x_vn: user.vendor,
+		x_ua: await sha1Short(user_agent)
+	};
+	return encodeJWT(data, secret_key);
+}
+
+export const oauth_authorize_user: ActionHandler = async function({ env }, {
+	vendor,
+	redirect_uri,
+	user_agent,
+	state,
+	code
+}) {
+	if (vendor !== 'github') {
+		halt(`invalid vendor: ${vendor}`);
+	}
+	const { id, login } = await githubAuthorizeUser({
+		redirect_uri,
+		client_id: env.GITHUB_CLIENT_ID,
+		client_secret: env.GITHUB_CLIENT_SECRET,
+		code,
+		state
+	});
+	const user: User = {
+		id: 'github::' + id,
+		name: login,
+		vendor
+	};
+	return {
+		token: await createUserToken({ user, user_agent, secret_key: env.SECRET_KEY }),
+		user
+	};
+};
+
+export const authenticate_user: ActionHandler = async ({ env }, { token, user_agent }) => {
+	if (token) {
+		return userFromTokenPayload(await decodeJWT(token, user_agent, env.SECRET_KEY));
+	}
+	return emptyUser();
+};
