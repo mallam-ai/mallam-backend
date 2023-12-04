@@ -2,7 +2,7 @@ import { ActionHandler } from '../types';
 import { Ai } from '@cloudflare/ai';
 import { datasets_vectorize_sentences_retrieve } from './datasets';
 
-const MODEL_CHAT = '@cf/meta/llama-2-7b-chat-int8';
+const MODEL_CHAT = '@cf/meta/llama-2-7b-chat-fp16';
 
 export const chat: ActionHandler = async (req, { text }) => {
 	const { env } = req;

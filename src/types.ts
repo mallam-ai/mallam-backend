@@ -8,6 +8,9 @@ export type Bindings = {
 	QUEUE_DATASETS_VECTORIZE_SENTENCES_UPSERT: Queue;
 
 	DB_DATASETS: D1Database;
+
+	GITHUB_CLIENT_ID: string;
+	GITHUB_CLIENT_SECRET: string;
 };
 
 export type ActionRequest = {

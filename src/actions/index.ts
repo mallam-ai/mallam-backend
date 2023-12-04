@@ -4,6 +4,7 @@ import {
 	datasets_vectorize_sentences_retrieve,
 	datasets_vectorize_sentences_upsert
 } from './datasets';
+import { oauth_create_authorization_uri } from './auth';
 
 import { chat } from './chat';
 import { ping } from './ping';
@@ -14,6 +15,7 @@ const ACTIONS = {
 	datasets_vectorize_sentences_upsert,
 	datasets_vectorize_sentences_retrieve,
 	chat,
+	oauth_create_authorization_uri,
 	// queues
 	'queue-mallam-datasets-vectorize-sentences-upsert': datasets_vectorize_sentences_upsert
 };
