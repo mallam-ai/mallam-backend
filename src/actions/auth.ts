@@ -1,5 +1,5 @@
-import { ActionHandler, emptyUser, TokenPayload, User, USER_AGENT, userFromTokenPayload } from '../types';
-import { decodeJWT, encodeJWT, encodeQuery, halt, isDebugURL, randomHex, sha1Short } from '../utils';
+import { ActionHandler, User, USER_AGENT } from '../types';
+import { encodeQuery, halt, isDebugURL, randomHex } from '../utils';
 
 export const oauth_create_authorization_uri: ActionHandler = async function (
 	{ env },
@@ -54,11 +54,11 @@ async function githubAuthorizeUser({
 		}),
 	});
 	if (!resToken.ok) {
-		halt('github oauth token request failed');
+		halt('github oauth token request failed: ' + (await resToken.text()));
 	}
 	const dataToken: any = await resToken.json();
 	if (!dataToken.access_token) {
-		halt('github oauth token request failed');
+		halt('github oauth token request failed: ' + JSON.stringify(dataToken));
 	}
 	const res = await fetch('https://api.github.com/user', {
 		headers: {
@@ -68,32 +68,14 @@ async function githubAuthorizeUser({
 		},
 	});
 	if (!res.ok) {
-		halt('github user request failed');
+		halt('github user request failed: ' + (await res.text()));
 	}
 	return (await res.json()) as { id: number; login: string };
 }
 
-async function createUserToken({ user, user_agent, secret_key }: { user: User; user_agent: string; secret_key: string }): Promise<string> {
-	const data: TokenPayload = {
-		sub: user.id,
-		name: user.name,
-		iat: Math.floor(Date.now() / 1000),
-		exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3,
-		x_vn: user.vendor,
-		x_ua: await sha1Short(user_agent),
-	};
-	return encodeJWT(data, secret_key);
-}
-
 export const oauth_authorize_user: ActionHandler = async function (
 	{ env },
-	{
-		vendor,
-		redirect_uri,
-		user_agent,
-		state,
-		code,
-	}: { vendor: string; redirect_uri: string; user_agent: string; state: string; code: string }
+	{ vendor, redirect_uri, state, code }: { vendor: string; redirect_uri: string; state: string; code: string }
 ) {
 	if (vendor !== 'github') {
 		halt(`invalid vendor: ${vendor}`);
@@ -114,14 +96,6 @@ export const oauth_authorize_user: ActionHandler = async function (
 		vendor,
 	};
 	return {
-		token: await createUserToken({ user, user_agent, secret_key: env.SECRET_KEY }),
 		user,
 	};
-};
-
-export const authenticate_user: ActionHandler = async ({ env }, { token, user_agent }) => {
-	if (token) {
-		return userFromTokenPayload(await decodeJWT(token, user_agent, env.SECRET_KEY));
-	}
-	return emptyUser();
 };
