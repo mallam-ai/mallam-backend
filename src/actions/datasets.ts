@@ -121,7 +121,7 @@ export const datasets_vectorize_sentences_retrieve: ActionHandler = async ({ env
 
 	const sentencesIds = vectorQuery.matches
 		.filter(vec => vec.score > RETRIEVE_SIMILARITY_CUTOFF)
-		.map(vec => vec.vectorId);
+		.map(vec => vec.id);
 
 	if (!sentencesIds.length) {
 		return [];
