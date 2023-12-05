@@ -54,11 +54,11 @@ async function githubAuthorizeUser({
 		}),
 	});
 	if (!resToken.ok) {
-		halt('github oauth token request failed');
+		halt('github oauth token request failed: ' + (await resToken.text()));
 	}
 	const dataToken: any = await resToken.json();
 	if (!dataToken.access_token) {
-		halt('github oauth token request failed');
+		halt('github oauth token request failed: ' + JSON.stringify(dataToken));
 	}
 	const res = await fetch('https://api.github.com/user', {
 		headers: {
@@ -68,7 +68,7 @@ async function githubAuthorizeUser({
 		},
 	});
 	if (!res.ok) {
-		halt('github user request failed');
+		halt('github user request failed: ' + (await res.text()));
 	}
 	return (await res.json()) as { id: number; login: string };
 }
