@@ -100,7 +100,6 @@ export function encodeBase64UrlJSON(j: any, noPadding?: boolean): string {
 	return encodeBase64Url(new TextEncoder().encode(JSON.stringify(j)), noPadding);
 }
 
-
 /**
  * encode url query
  * @param data key-value to encode
@@ -177,7 +176,7 @@ async function hmacImportKey(secret: string, hash: 'SHA-256' | 'MD5' = 'SHA-256'
 		new TextEncoder().encode(secret),
 		{
 			name: 'HMAC',
-			hash
+			hash,
 		},
 		false,
 		['sign', 'verify']
@@ -205,10 +204,9 @@ export async function hmacVerify(src: string, signature: Uint8Array, secret: str
 	return await crypto.subtle.verify('HMAC', await hmacImportKey(secret, hash), signature, new TextEncoder().encode(src));
 }
 
-
 const JWT_HEADER_HS256 = {
 	typ: 'JWT',
-	alg: 'HS256'
+	alg: 'HS256',
 };
 
 /**
@@ -267,4 +265,9 @@ export async function decodeJWT(s: string, userAgent: string, secret: string): P
 	}
 
 	return data;
+}
+
+export function isDebugURL(url: string): boolean {
+	const u = new URL(url);
+	return u.hostname === 'localhost' || u.hostname === '127.0.0.1';
 }

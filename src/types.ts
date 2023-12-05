@@ -11,6 +11,9 @@ export type Bindings = {
 
 	GITHUB_CLIENT_ID: string;
 	GITHUB_CLIENT_SECRET: string;
+
+	GITHUB_DEV_CLIENT_ID: string;
+	GITHUB_DEV_CLIENT_SECRET: string;
 };
 
 export type ActionRequest = {
@@ -42,7 +45,7 @@ export function emptyUser(): User {
 	return {
 		id: '',
 		vendor: '',
-		name: ''
+		name: '',
 	};
 }
 
@@ -50,6 +53,6 @@ export function userFromTokenPayload(payload: TokenPayload): User {
 	return {
 		id: payload.sub,
 		vendor: payload.x_vn,
-		name: payload.name
+		name: payload.name,
 	};
 }
