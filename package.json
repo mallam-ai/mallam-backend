@@ -10,14 +10,14 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231218.0",
     "typescript": "^5.3.3",
-    "wrangler": "^3.22.0"
+    "wrangler": "^3.22.3"
   },
   "dependencies": {
-    "@cloudflare/ai": "^1.0.46",
+    "@cloudflare/ai": "^1.0.47",
     "@types/lodash": "^4.14.202",
     "drizzle-kit": "^0.19.13",
     "drizzle-orm": "^0.28.6",
-    "hono": "^3.11.8",
+    "hono": "^3.12.0",
     "lodash": "^4.17.21"
   }
 }
