@@ -114,14 +114,7 @@ export const oauth_authorize_user: ActionHandler = async function (
 		})
 		.returning();
 
-	const user: User = {
-		id: 'github::' + id,
-		name: login,
-		vendor,
-	};
-
 	return {
-		user,
-		user_v2: insertedUsers[0],
+		user: insertedUsers[0],
 	};
 };
