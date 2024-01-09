@@ -29,12 +29,15 @@ export const tTeams = sqliteTable(
 		id: text('id').primaryKey(),
 		// display name
 		displayName: text('display_name').notNull(),
+		// created by
+		createdBy: text('created_by').notNull(),
 		// createdAt
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 		// deletedAt
 		deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
 	},
 	(teams) => ({
+		idx_teams_created_by: index('idx_teams_created_by').on(teams.createdBy),
 		idx_teams_created_at: index('idx_teams_created_at').on(teams.createdAt),
 		idx_teams_deleted_at: index('idx_teams_deleted_at').on(teams.deletedAt),
 	})
