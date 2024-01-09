@@ -1,6 +1,6 @@
 import { ActionHandler } from '../types';
 import { drizzle } from 'drizzle-orm/d1';
-import { tDocuments, tSentences } from '../../schema';
+import { tDocuments, tSentences } from '../../schema-datasets';
 import { and, eq, gte, inArray, lte, or } from 'drizzle-orm';
 import { Ai } from '@cloudflare/ai';
 import { chunk, groupBy } from 'lodash';

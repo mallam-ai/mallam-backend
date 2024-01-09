@@ -1,12 +1,15 @@
 name = "mallam-backend"
 main = "src/index.ts"
 compatibility_date = "2023-10-25"
-routes = [
-	{ pattern = "api.mallam.ai", custom_domain = true }
-]
+routes = [{ pattern = "api.mallam.ai", custom_domain = true }]
 
 [ai]
 binding = "AI"
+
+[[d1_databases]]
+binding = "DB_MAIN"
+database_name = "mallam-main"
+database_id = "8ea16b21-7de0-4cd1-9a65-cf3d049639c0"
 
 [[d1_databases]]
 binding = "DB_DATASETS"

@@ -7,6 +7,7 @@ export type Bindings = {
 
 	QUEUE_DATASETS_VECTORIZE_SENTENCES_UPSERT: Queue;
 
+	DB_MAIN: D1Database;
 	DB_DATASETS: D1Database;
 
 	GITHUB_CLIENT_ID: string;
