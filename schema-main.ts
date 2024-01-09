@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import { index, uniqueIndex, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const tUsers = sqliteTable(
@@ -74,3 +75,22 @@ export const tMemberships = sqliteTable(
 		idx_memberships_role: index('idx_memberships_role').on(memberships.role),
 	})
 );
+
+export const rMembershipsToUser = relations(tUsers, ({ many }) => ({
+	memberships: many(tMemberships),
+}));
+
+export const rMembershipsToTeam = relations(tTeams, ({ many }) => ({
+	memberships: many(tMemberships),
+}));
+
+export const rMemberships = relations(tMemberships, ({ one }) => ({
+	user: one(tUsers, {
+		fields: [tMemberships.userId],
+		references: [tUsers.id],
+	}),
+	team: one(tTeams, {
+		fields: [tMemberships.teamId],
+		references: [tTeams.id],
+	}),
+}));
