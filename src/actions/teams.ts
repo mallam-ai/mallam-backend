@@ -44,17 +44,19 @@ export const team_create: ActionHandler = async function (
 			.returning()
 	)[0];
 
-	const membership = await db
-		.insert(schema.tMemberships)
-		.values({
-			id: crypto.randomUUID(),
-			userId,
-			teamId: team.id,
-			role: schema.membershipRoles.admin,
-			createdBy: userId,
-			createdAt: new Date(),
-		})
-		.returning();
+	const membership = (
+		await db
+			.insert(schema.tMemberships)
+			.values({
+				id: crypto.randomUUID(),
+				userId,
+				teamId: team.id,
+				role: schema.membershipRoles.admin,
+				createdBy: userId,
+				createdAt: new Date(),
+			})
+			.returning()
+	)[0];
 
 	return {
 		team,
