@@ -8,6 +8,13 @@
       "when": 1704791683864,
       "tag": "0000_light_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1704805836513,
+      "tag": "0001_silky_the_anarchist",
+      "breakpoints": true
     }
   ]
 }
