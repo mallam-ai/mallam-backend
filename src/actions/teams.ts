@@ -32,12 +32,9 @@ export const team_list: ActionHandler = async function (
 			const membership = memberships.find((m) => m.teamId === team.id)!;
 			return Object.assign({}, team, {
 				deletedAt: undefined,
-				membership: {
-					id: membership.id,
-					role: membership.role,
-					createdBy: membership.createdBy,
-					createdAt: membership.createdAt,
-				},
+				membershipId: membership.id,
+				membershipRole: membership.role,
+				membershipCreatedAt: membership.createdAt,
 			});
 		}),
 	};
