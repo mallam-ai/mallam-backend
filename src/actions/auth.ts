@@ -1,5 +1,7 @@
+import { drizzle } from 'drizzle-orm/d1';
 import { ActionHandler, User, USER_AGENT } from '../types';
 import { encodeQuery, halt, isDebugURL, randomHex } from '../utils';
+import { tUsers } from '../../schema-main';
 
 export const oauth_create_authorization_uri: ActionHandler = async function (
 	{ env },
@@ -90,12 +92,36 @@ export const oauth_authorize_user: ActionHandler = async function (
 		code,
 		state,
 	});
+
+	const uuid = crypto.randomUUID();
+
+	const db = drizzle(env.DB_MAIN);
+
+	const insertedUsers = await db
+		.insert(tUsers)
+		.values({
+			id: crypto.randomUUID(),
+			vendor,
+			vendorUserId: id.toString(),
+			displayName: login,
+			createdAt: new Date(),
+		})
+		.onConflictDoUpdate({
+			target: [tUsers.vendor, tUsers.vendorUserId],
+			set: {
+				displayName: login,
+			},
+		})
+		.returning();
+
 	const user: User = {
 		id: 'github::' + id,
 		name: login,
 		vendor,
 	};
+
 	return {
 		user,
+		user_v2: insertedUsers[0],
 	};
 };

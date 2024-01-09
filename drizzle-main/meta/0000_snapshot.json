@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "67eb0289-7c02-4ae7-80b5-c983a9892896",
+  "id": "358b0949-7a74-4243-9927-ff71754b7d30",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "users": {
@@ -14,15 +14,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "source": {
-          "name": "source",
+        "vendor": {
+          "name": "vendor",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "source_user_id": {
-          "name": "source_user_id",
+        "vendor_user_id": {
+          "name": "vendor_user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -44,25 +44,25 @@
         }
       },
       "indexes": {
-        "idx_users_source": {
-          "name": "idx_users_source",
+        "idx_users_vendor": {
+          "name": "idx_users_vendor",
           "columns": [
-            "source"
+            "vendor"
           ],
           "isUnique": false
         },
-        "idx_users_source_user_id": {
-          "name": "idx_users_source_user_id",
+        "idx_users_vendor_user_id": {
+          "name": "idx_users_vendor_user_id",
           "columns": [
-            "source_user_id"
+            "vendor_user_id"
           ],
           "isUnique": false
         },
-        "idx_users_unique_source_with_id": {
-          "name": "idx_users_unique_source_with_id",
+        "idx_users_unique_vendor_with_id": {
+          "name": "idx_users_unique_vendor_with_id",
           "columns": [
-            "source",
-            "source_user_id"
+            "vendor",
+            "vendor_user_id"
           ],
           "isUnique": true
         },
