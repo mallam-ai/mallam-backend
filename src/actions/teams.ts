@@ -31,6 +31,7 @@ export const team_list: ActionHandler = async function (
 		teams: teams.map((team) => {
 			const membership = memberships.find((m) => m.teamId === team.id)!;
 			return Object.assign({}, team, {
+				deletedAt: undefined,
 				membership: {
 					id: membership.id,
 					role: membership.role,
