@@ -97,7 +97,7 @@ export const oauth_authorize_user: ActionHandler = async function (
 
 	const db = drizzle(env.DB_MAIN);
 
-	const insertedUsers = await db
+	const users = await db
 		.insert(tUsers)
 		.values({
 			id: crypto.randomUUID(),
@@ -115,6 +115,6 @@ export const oauth_authorize_user: ActionHandler = async function (
 		.returning();
 
 	return {
-		user: insertedUsers[0],
+		user: users[0],
 	};
 };
