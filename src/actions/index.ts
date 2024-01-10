@@ -2,7 +2,7 @@ import { ActionHandler } from '../types';
 import { datasets_document_upsert, datasets_vectorize_sentences_retrieve, datasets_vectorize_sentences_upsert } from './datasets';
 import { oauth_authorize_user, oauth_create_authorization_uri } from './auth';
 import { user_get } from './users';
-import { team_create, team_list, team_get } from './teams';
+import { team_create, team_list, team_get, team_delete } from './teams';
 import { chat } from './chat';
 import { ping } from './ping';
 
@@ -18,6 +18,7 @@ const ACTIONS = {
 	team_create,
 	team_list,
 	team_get,
+	team_delete,
 	// queues
 	'queue-mallam-datasets-vectorize-sentences-upsert': datasets_vectorize_sentences_upsert,
 };
