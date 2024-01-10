@@ -48,6 +48,12 @@ export const membership_add: ActionHandler = async function (
 		}
 	}
 
+	const targetUser = await db.query.tUsers.findFirst({ where: eq(schema.tUsers.id, targetUserId) });
+
+	if (!targetUser) {
+		halt(`user ${targetUserId} not found`, 404);
+	}
+
 	const membership = await db
 		.insert(schema.tMemberships)
 		.values({
