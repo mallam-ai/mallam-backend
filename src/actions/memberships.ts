@@ -22,6 +22,10 @@ export const membership_add: ActionHandler = async function (
 		halt(`cannot add yourself`, 403);
 	}
 
+	if ([schema.membershipRoles.member, schema.membershipRoles.viewer].indexOf(role) === -1) {
+		halt(`invalid role ${role}`, 400);
+	}
+
 	const db = drizzle(env.DB_MAIN, { schema });
 
 	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
