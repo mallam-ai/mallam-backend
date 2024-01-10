@@ -65,7 +65,7 @@ export const membership_add: ActionHandler = async function (
 			createdBy: userId,
 		})
 		.onConflictDoUpdate({
-			target: schema.tMemberships.id,
+			target: [schema.tMemberships.userId, schema.tMemberships.teamId],
 			set: { role: role },
 		})
 		.returning();
