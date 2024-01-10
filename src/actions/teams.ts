@@ -6,6 +6,41 @@ import { halt } from '../utils';
 
 const LIMIT_TEAM_PER_USER = 10;
 
+export const team_leave: ActionHandler = async function (
+	{ env },
+	{
+		userId,
+		teamId,
+	}: {
+		userId: string;
+		teamId: string;
+	}
+) {
+	const db = drizzle(env.DB_MAIN, { schema });
+
+	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
+
+	if (!team) {
+		halt(`team ${teamId} not found`, 404);
+	}
+
+	const membership = await db.query.tMemberships.findFirst({
+		where: and(
+			eq(schema.tMemberships.userId, userId),
+			eq(schema.tMemberships.teamId, teamId),
+			inArray(schema.tMemberships.role, [schema.membershipRoles.member, schema.membershipRoles.viewer])
+		),
+	});
+
+	if (!membership) {
+		halt(`user ${userId} is not a member of team ${teamId}`, 403);
+	}
+
+	await db.delete(schema.tMemberships).where(eq(schema.tMemberships.id, membership.id));
+
+	return {};
+};
+
 export const team_update: ActionHandler = async function (
 	{ env },
 	{
