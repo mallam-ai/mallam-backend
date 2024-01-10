@@ -5,6 +5,7 @@ import { user_get } from './users';
 import { team_create, team_list, team_get, team_delete, team_update, team_leave } from './teams';
 import { chat } from './chat';
 import { ping } from './ping';
+import { membership_list } from './memberships';
 
 const ACTIONS = {
 	ping,
@@ -21,6 +22,7 @@ const ACTIONS = {
 	team_update,
 	team_delete,
 	team_leave,
+	membership_list,
 	// queues
 	'queue-mallam-datasets-vectorize-sentences-upsert': datasets_vectorize_sentences_upsert,
 };
