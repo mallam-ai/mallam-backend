@@ -1,13 +1,8 @@
-import { drizzle } from 'drizzle-orm/d1';
 import { ActionHandler } from '../types';
-import * as schema from '../../schema-main';
-import { halt } from '../utils';
+import { DAO } from '../dao';
 
-export const user_get: ActionHandler = async function ({ env }, { id }) {
-	const db = drizzle(env.DB_MAIN, { schema });
-	const user = await db.query.tUsers.findFirst({ where: (users, { eq }) => eq(users.id, id) });
-	if (!user) {
-		halt('user not found', 400);
-	}
+export const user_get: ActionHandler = async function ({ env }, { id, userId }) {
+	const dao = new DAO(env);
+	const user = await dao.mustUser(userId || id);
 	return { user };
 };

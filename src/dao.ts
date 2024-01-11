@@ -71,6 +71,27 @@ export class DAO {
 		});
 	}
 
+	async upsertUser({ vendor, vendorUserId, displayName }: { vendor: string; vendorUserId: string; displayName: string }) {
+		return (
+			await this.db
+				.insert(schema.tUsers)
+				.values({
+					id: crypto.randomUUID(),
+					vendor,
+					vendorUserId,
+					displayName,
+					createdAt: new Date(),
+				})
+				.onConflictDoUpdate({
+					target: [schema.tUsers.vendor, schema.tUsers.vendorUserId],
+					set: {
+						displayName,
+					},
+				})
+				.returning()
+		)[0];
+	}
+
 	async mustUser(userId: string) {
 		const user = await this.db.query.tUsers.findFirst({ where: eq(schema.tUsers.id, userId) });
 		if (!user) {

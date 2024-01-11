@@ -1,7 +1,6 @@
-import { drizzle } from 'drizzle-orm/d1';
-import { ActionHandler, User, USER_AGENT } from '../types';
+import { ActionHandler, USER_AGENT } from '../types';
 import { encodeQuery, halt, isDebugURL, randomHex } from '../utils';
-import { tUsers } from '../../schema-main';
+import { DAO } from '../dao';
 
 export const oauth_create_authorization_uri: ActionHandler = async function (
 	{ env },
@@ -93,28 +92,13 @@ export const oauth_authorize_user: ActionHandler = async function (
 		state,
 	});
 
-	const uuid = crypto.randomUUID();
+	const dao = new DAO(env);
 
-	const db = drizzle(env.DB_MAIN);
+	const user = await dao.upsertUser({
+		vendor,
+		vendorUserId: id.toString(),
+		displayName: login,
+	});
 
-	const users = await db
-		.insert(tUsers)
-		.values({
-			id: crypto.randomUUID(),
-			vendor,
-			vendorUserId: id.toString(),
-			displayName: login,
-			createdAt: new Date(),
-		})
-		.onConflictDoUpdate({
-			target: [tUsers.vendor, tUsers.vendorUserId],
-			set: {
-				displayName: login,
-			},
-		})
-		.returning();
-
-	return {
-		user: users[0],
-	};
+	return { user };
 };
