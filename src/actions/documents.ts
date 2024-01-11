@@ -132,6 +132,9 @@ export const document_list: ActionHandler = async function (
 	await dao.mustMembership(teamId, userId);
 
 	return {
+		offset,
+		limit,
+		total: await dao.countDocuments(teamId),
 		documents: await dao.listDocuments(teamId, { offset, limit }),
 	};
 };

@@ -208,6 +208,18 @@ export class DAO {
 		)[0];
 	}
 
+	async countDocuments(teamId: string) {
+		const count = (
+			await this.db
+				.select({
+					value: sql<number>`count(${schema.tDocuments.id})`,
+				})
+				.from(schema.tDocuments)
+				.where(eq(schema.tDocuments.teamId, teamId))
+		)[0];
+		return count.value;
+	}
+
 	async listDocuments(teamId: string, { offset, limit }: { offset: number; limit: number }) {
 		await this.db.query.tDocuments.findMany({
 			where: eq(schema.tDocuments.teamId, teamId),
