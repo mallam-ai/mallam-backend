@@ -1,6 +1,6 @@
 name = "mallam-backend"
 main = "src/index.ts"
-compatibility_date = "2023-10-25"
+compatibility_date = "2023-12-01"
 routes = [{ pattern = "api.mallam.ai", custom_domain = true }]
 
 [ai]
