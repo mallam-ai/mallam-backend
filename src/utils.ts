@@ -1,5 +1,4 @@
 import { Bindings, TokenPayload } from './types';
-import { Env } from './types';
 
 /**
  * wait for ms, Promise version of setTimeout

@@ -1,10 +1,10 @@
 import { ActionHandler } from '../types';
 import * as schema from '../../schema-main';
 import { drizzle } from 'drizzle-orm/d1';
-import { sql, and, isNull, eq, inArray } from 'drizzle-orm';
-import { halt, invokeStanzaSentenceSegmentation } from '../utils';
+import { invokeStanzaSentenceSegmentation } from '../utils';
 import { chunk } from 'lodash';
 import { Ai } from '@cloudflare/ai';
+import { DAO } from '../dao';
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
@@ -16,29 +16,17 @@ export const document_analyze: ActionHandler = async function (
 		documentId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const document = await db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
-
-	if (!document) {
-		console.log(`document ${documentId} not found`);
-		return;
-	}
+	// get document
+	const document = await dao.mustDocument(documentId);
 
 	// invoke stanza
 	const sentenceTexts = await invokeStanzaSentenceSegmentation(env, document.content);
 
 	// delete old sentences
 	{
-		// find sentence ids
-		const sentences = await db
-			.select({
-				id: schema.tSentences.id,
-			})
-			.from(schema.tSentences)
-			.where(eq(schema.tSentences.documentId, documentId));
-
-		const sentenceIds = sentences.map((s) => s.id);
+		const sentenceIds = await dao.getSentenceIds(documentId);
 
 		// delete from vectorize database
 		await Promise.all(
@@ -47,8 +35,7 @@ export const document_analyze: ActionHandler = async function (
 			})
 		);
 
-		// delete from d1 database
-		await db.delete(schema.tSentences).where(eq(schema.tSentences.documentId, documentId));
+		await dao.deleteSentences(documentId);
 	}
 
 	// create new sentences
@@ -83,30 +70,11 @@ export const sentence_analyze: ActionHandler = async function (
 		return;
 	}
 
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const document = await db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
+	const document = await dao.mustDocument(documentId);
 
-	if (!document) {
-		console.log(`document ${documentId} not found`);
-		return;
-	}
-
-	const id = `${documentId}#${sequenceId}`;
-
-	const sentence = await db
-		.insert(schema.tSentences)
-		.values({
-			id,
-			documentId,
-			teamId: document.teamId,
-			sequenceId,
-			content,
-			createdBy: document.createdBy,
-			createdAt: new Date(),
-		})
-		.onConflictDoNothing()
-		.returning();
+	const sentence = await dao.createSentence(document, { sequenceId, content });
 
 	const ai = new Ai(env.AI);
 
@@ -117,12 +85,12 @@ export const sentence_analyze: ActionHandler = async function (
 	const values = data[0];
 
 	if (!values) {
-		throw new Error(`Failed to vectorize sentence ${id}`);
+		throw new Error(`Failed to vectorize sentence ${sentence.id}`);
 	}
 
 	await env.VECTORIZE_MAIN_SENTENCES.upsert([
 		{
-			id,
+			id: sentence.id,
 			values,
 			namespace: document.teamId,
 			metadata: {
@@ -149,42 +117,13 @@ export const document_create: ActionHandler = async function (
 		userId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
+	await dao.mustTeam(teamId);
 
-	{
-		if (!team) {
-			halt(`team ${teamId} not found`, 404);
-		}
+	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin, schema.membershipRoles.member);
 
-		const membership = await db.query.tMemberships.findFirst({
-			where: and(
-				eq(schema.tMemberships.userId, userId),
-				eq(schema.tMemberships.teamId, teamId),
-				inArray(schema.tMemberships.role, [schema.membershipRoles.admin, schema.membershipRoles.member])
-			),
-		});
-
-		if (!membership) {
-			halt(`user ${userId} is not a member of team ${teamId}`, 403);
-		}
-	}
-
-	const document = (
-		await db
-			.insert(schema.tDocuments)
-			.values({
-				id: crypto.randomUUID(),
-				teamId,
-				isPublic: false,
-				title,
-				content,
-				createdBy: userId,
-				createdAt: new Date(),
-			})
-			.returning()
-	)[0];
+	const document = await dao.createDocument({ teamId, title, content, createdBy: userId });
 
 	await env.QUEUE_MAIN_DOCUMENT_ANALYZE.send(
 		{
