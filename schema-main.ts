@@ -94,3 +94,93 @@ export const rMemberships = relations(tMemberships, ({ one }) => ({
 		references: [tTeams.id],
 	}),
 }));
+
+export const tDocuments = sqliteTable(
+	'documents',
+	{
+		// unique id for document
+		id: text('id').primaryKey(),
+		// repo name
+		teamId: text('team_id').notNull(),
+		// public
+		isPublic: integer('is_public', { mode: 'boolean' }).notNull(),
+		// title of document
+		title: text('title').notNull(),
+		// content of document
+		content: text('content').notNull(),
+		// created by
+		createdBy: text('created_by').notNull(),
+		// created at
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+	},
+	(documents) => ({
+		idx_documents_team_id: index('idx_documents_team_id').on(documents.teamId),
+		idx_documents_is_public: index('idx_documents_is_public').on(documents.isPublic),
+		idx_documents_created_by: index('idx_documents_created_by').on(documents.createdBy),
+		idx_documents_created_at: index('idx_documents_created_at').on(documents.createdAt),
+	})
+);
+
+export const tSentences = sqliteTable(
+	'sentences',
+	{
+		// unique id for document, in format of 'documentId#sequenceId'
+		id: text('id').primaryKey(),
+		// repo name
+		teamId: text('team_id').notNull(),
+		// document id
+		documentId: text('document_id').notNull(),
+		// sequence id, from 0 to n, -1 for title
+		sequenceId: integer('sequence_id').notNull(),
+		// content of document
+		content: text('content').notNull(),
+		// created by
+		createdBy: text('created_by').notNull(),
+		// created at
+		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+	},
+	(sentences) => ({
+		idx_sentences_team_id: index('idx_sentences_team_id').on(sentences.teamId),
+		idx_sentences_document_id: index('idx_sentences_document_id').on(sentences.documentId),
+		idx_sentences_sequence_id: index('idx_sentences_sequence_id').on(sentences.sequenceId),
+		idx_sentences_unique_document_sentence_id: uniqueIndex('idx_sentences_unique_document_sentence_id').on(
+			sentences.documentId,
+			sentences.sequenceId
+		),
+		idx_sentences_created_by: index('idx_sentences_created_by').on(sentences.createdBy),
+		idx_sentences_created_at: index('idx_sentences_created_at').on(sentences.createdAt),
+	})
+);
+
+export const rSentencesToDocument = relations(tDocuments, ({ many }) => ({
+	sentences: many(tSentences),
+}));
+
+export const rSentencesToTeam = relations(tTeams, ({ many }) => ({
+	sentences: many(tSentences),
+}));
+
+export const rDocumentToSentence = relations(tSentences, ({ one }) => ({
+	document: one(tDocuments, {
+		fields: [tSentences.documentId],
+		references: [tDocuments.id],
+	}),
+}));
+
+export const rTeamToSentence = relations(tSentences, ({ one }) => ({
+	team: one(tTeams, {
+		fields: [tSentences.teamId],
+		references: [tTeams.id],
+	}),
+}));
+
+export const rDocumentsToTeam = relations(tTeams, ({ many }) => ({
+	documents: many(tDocuments),
+}));
+
+export const rTeamToDocuments = relations(tDocuments, ({ one }) => ({
+	team: one(tTeams, {
+		fields: [tDocuments.teamId],
+		references: [tTeams.id],
+	}),
+}));
