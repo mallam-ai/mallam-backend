@@ -252,6 +252,10 @@ export class DAO {
 		)[0];
 	}
 
+	async updateDocument(documentId: string, { title, content }: { title: string; content: string }) {
+		await this.db.update(schema.tDocuments).set({ title, content, isAnalyzed: false }).where(eq(schema.tDocuments.id, documentId));
+	}
+
 	async markDocumentAnalyzed(documentId: string, isAnalyzed: boolean) {
 		await this.db.update(schema.tDocuments).set({ isAnalyzed }).where(eq(schema.tDocuments.id, documentId));
 	}

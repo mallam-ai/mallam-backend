@@ -24,6 +24,37 @@ export const document_get: ActionHandler = async function (
 	return { document };
 };
 
+export const document_update: ActionHandler = async function (
+	{ env },
+	{
+		userId,
+		documentId,
+		title,
+		content,
+	}: {
+		userId: string;
+		documentId: string;
+		title: string;
+		content: string;
+	}
+) {
+	const dao = new DAO(env);
+	const document = await dao.mustDocument(documentId);
+	const team = await dao.mustTeam(document.teamId);
+
+	await dao.mustMembership(team.id, userId);
+
+	await dao.updateDocument(document.id, { title, content });
+
+	return {
+		document: Object.assign(document, {
+			content,
+			title,
+			isAnalyzed: false,
+		}),
+	};
+};
+
 export const document_analyze: ActionHandler = async function (
 	{ env },
 	{
