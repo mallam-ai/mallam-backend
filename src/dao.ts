@@ -1,6 +1,6 @@
 import * as schema from '../schema-main';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, isNull, inArray } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql } from 'drizzle-orm';
 import { Bindings } from './types';
 import { halt } from './utils';
 
@@ -13,6 +13,62 @@ export class DAO {
 
 	constructor(env: Bindings) {
 		this.db = dirzzleMain(env);
+	}
+
+	async createTeam({ userId, displayName }: { userId: string; displayName: string }) {
+		return (
+			await this.db
+				.insert(schema.tTeams)
+				.values({
+					id: crypto.randomUUID(),
+					displayName,
+					createdBy: userId,
+					createdAt: new Date(),
+				})
+				.returning()
+		)[0];
+	}
+
+	async countUserCreatedTeams(userId: string) {
+		const count = (
+			await this.db
+				.select({ value: sql<number>`count(${schema.tTeams.id})` })
+				.from(schema.tTeams)
+				.where(and(eq(schema.tTeams.createdBy, userId), isNull(schema.tTeams.deletedAt)))
+		)[0];
+
+		return count.value;
+	}
+
+	async listUserTeams(userId: string) {
+		// due to cloudflare D1 bug, we have to use this workaround
+		const memberships = await this.db.query.tMemberships.findMany({
+			where: eq(schema.tMemberships.userId, userId),
+		});
+
+		const teamIds = memberships.map((m) => m.teamId);
+
+		const teams = await this.db.query.tTeams.findMany({
+			where: and(inArray(schema.tTeams.id, teamIds), isNull(schema.tTeams.deletedAt)),
+		});
+
+		return teams.map((team) => {
+			const membership = memberships.find((m) => m.teamId === team.id)!;
+			return Object.assign(
+				{},
+				team,
+				{
+					deletedAt: undefined,
+				},
+				membership
+					? {
+							membershipId: membership.id,
+							membershipRole: membership.role,
+							membershipCreatedAt: membership.createdAt,
+					  }
+					: {}
+			);
+		});
 	}
 
 	async mustUser(userId: string) {
@@ -70,16 +126,16 @@ export class DAO {
 	}
 
 	async mustMembership(teamId: string, userId: string, ...roles: Array<string>) {
-		if (roles.length === 0) {
-			throw new Error('mustMembership: no roles provided');
+		const clauses = [eq(schema.tMemberships.userId, userId), eq(schema.tMemberships.teamId, teamId)];
+
+		if (roles.length == 1) {
+			clauses.push(eq(schema.tMemberships.role, roles[0]));
+		} else if (roles.length > 1) {
+			clauses.push(inArray(schema.tMemberships.role, roles));
 		}
 
 		const membership = await this.db.query.tMemberships.findFirst({
-			where: and(
-				eq(schema.tMemberships.userId, userId),
-				eq(schema.tMemberships.teamId, teamId),
-				roles.length > 1 ? inArray(schema.tMemberships.role, roles) : eq(schema.tMemberships.role, roles[0])
-			),
+			where: and(...clauses),
 		});
 
 		if (!membership) {
@@ -87,6 +143,14 @@ export class DAO {
 		}
 
 		return membership;
+	}
+
+	async deleteTeam(teamId: string) {
+		await this.db.update(schema.tTeams).set({ deletedAt: new Date() }).where(eq(schema.tTeams.id, teamId));
+	}
+
+	async updateTeam(teamId: string, { displayName }: { displayName: string }) {
+		await this.db.update(schema.tTeams).set({ displayName }).where(eq(schema.tTeams.id, teamId));
 	}
 
 	async mustTeam(teamId: string) {
@@ -97,12 +161,8 @@ export class DAO {
 		return team;
 	}
 
-	async getDocument(documentId: string) {
-		return await this.db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
-	}
-
 	async mustDocument(documentId: string) {
-		const document = await this.getDocument(documentId);
+		const document = await this.db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
 		if (!document) {
 			halt(`document ${documentId} not found`, 404);
 		}

@@ -1,8 +1,7 @@
 import { ActionHandler } from '../types';
 import * as schema from '../../schema-main';
-import { drizzle } from 'drizzle-orm/d1';
-import { sql, and, isNull, eq, inArray } from 'drizzle-orm';
 import { halt } from '../utils';
+import { DAO } from '../dao';
 
 const LIMIT_TEAM_PER_USER = 10;
 
@@ -16,27 +15,13 @@ export const team_leave: ActionHandler = async function (
 		teamId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
+	await dao.mustTeam(teamId);
 
-	if (!team) {
-		halt(`team ${teamId} not found`, 404);
-	}
+	await dao.mustMembership(teamId, userId, schema.membershipRoles.member, schema.membershipRoles.viewer);
 
-	const membership = await db.query.tMemberships.findFirst({
-		where: and(
-			eq(schema.tMemberships.userId, userId),
-			eq(schema.tMemberships.teamId, teamId),
-			inArray(schema.tMemberships.role, [schema.membershipRoles.member, schema.membershipRoles.viewer])
-		),
-	});
-
-	if (!membership) {
-		halt(`user ${userId} is not a member of team ${teamId}`, 403);
-	}
-
-	await db.delete(schema.tMemberships).where(eq(schema.tMemberships.id, membership.id));
+	await dao.deleteMembership(teamId, userId);
 
 	return {};
 };
@@ -53,27 +38,13 @@ export const team_update: ActionHandler = async function (
 		displayName: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
+	await dao.mustTeam(teamId);
 
-	if (!team) {
-		halt(`team ${teamId} not found`, 404);
-	}
+	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin);
 
-	const membership = await db.query.tMemberships.findFirst({
-		where: and(
-			eq(schema.tMemberships.userId, userId),
-			eq(schema.tMemberships.teamId, teamId),
-			eq(schema.tMemberships.role, schema.membershipRoles.admin)
-		),
-	});
-
-	if (!membership) {
-		halt(`user ${userId} is not an admin of team ${teamId}`, 403);
-	}
-
-	await db.update(schema.tTeams).set({ displayName }).where(eq(schema.tTeams.id, teamId));
+	await dao.updateTeam(teamId, { displayName });
 
 	return {};
 };
@@ -88,27 +59,13 @@ export const team_delete: ActionHandler = async function (
 		teamId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
+	await dao.mustTeam(teamId);
 
-	if (!team) {
-		halt(`team ${teamId} not found`, 404);
-	}
+	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin);
 
-	const membership = await db.query.tMemberships.findFirst({
-		where: and(
-			eq(schema.tMemberships.userId, userId),
-			eq(schema.tMemberships.teamId, teamId),
-			eq(schema.tMemberships.role, schema.membershipRoles.admin)
-		),
-	});
-
-	if (!membership) {
-		halt(`user ${userId} is not an admin of team ${teamId}`, 403);
-	}
-
-	await db.update(schema.tTeams).set({ deletedAt: new Date() }).where(eq(schema.tTeams.id, teamId));
+	await dao.deleteTeam(teamId);
 
 	return {};
 };
@@ -123,21 +80,11 @@ export const team_get: ActionHandler = async function (
 		teamId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	const team = await db.query.tTeams.findFirst({ where: and(eq(schema.tTeams.id, teamId), isNull(schema.tTeams.deletedAt)) });
+	const team = await dao.mustTeam(teamId);
 
-	if (!team) {
-		halt(`team ${teamId} not found`, 404);
-	}
-
-	const membership = await db.query.tMemberships.findFirst({
-		where: and(eq(schema.tMemberships.userId, userId), eq(schema.tMemberships.teamId, teamId)),
-	});
-
-	if (!membership) {
-		halt(`user ${userId} is not a member of team ${teamId}`, 403);
-	}
+	const membership = await dao.mustMembership(teamId, userId);
 
 	return {
 		team: Object.assign({}, team, {
@@ -157,52 +104,11 @@ export const team_list: ActionHandler = async function (
 		userId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
-	// due to cloudflare D1 bug, we have to use this workaround
-	const memberships = await db.query.tMemberships.findMany({
-		where: eq(schema.tMemberships.userId, userId),
-	});
+	const teams = await dao.listUserTeams(userId);
 
-	const teamIds = memberships.map((m) => m.teamId);
-
-	const teams = await db.query.tTeams.findMany({
-		where: and(inArray(schema.tTeams.id, teamIds), isNull(schema.tTeams.deletedAt)),
-	});
-
-	return {
-		teams: teams.map((team) => {
-			const membership = memberships.find((m) => m.teamId === team.id)!;
-			return Object.assign(
-				{},
-				team,
-				{
-					deletedAt: undefined,
-				},
-				membership
-					? {
-							membershipId: membership.id,
-							membershipRole: membership.role,
-							membershipCreatedAt: membership.createdAt,
-					  }
-					: {}
-			);
-		}),
-	};
-
-	/*
-	const teams = await db
-		.select()
-		.from(schema.tMemberships)
-		.leftJoin(schema.tTeams, eq(schema.tTeams.id, schema.tMemberships.teamId))
-		.leftJoin(schema.tUsers, eq(schema.tUsers.id, schema.tMemberships.userId))
-		.where(and(eq(schema.tUsers.id, userId), isNull(schema.tTeams.deletedAt)))
-		.all();
-
-	return {
-		teams,
-	};
-	*/
+	return { teams };
 };
 
 export const team_create: ActionHandler = async function (
@@ -215,47 +121,20 @@ export const team_create: ActionHandler = async function (
 		userId: string;
 	}
 ) {
-	const db = drizzle(env.DB_MAIN, { schema });
+	const dao = new DAO(env);
 
 	// validate max team per user
 	{
-		const count = (
-			await db
-				.select({ value: sql<number>`count(${schema.tTeams.id})` })
-				.from(schema.tTeams)
-				.where(and(eq(schema.tTeams.createdBy, userId), isNull(schema.tTeams.deletedAt)))
-		)[0];
+		const count = await dao.countUserCreatedTeams(userId);
 
-		if (count.value > LIMIT_TEAM_PER_USER) {
+		if (count > LIMIT_TEAM_PER_USER) {
 			halt(`user ${userId} has reached the limit of ${LIMIT_TEAM_PER_USER} teams`, 400);
 		}
 	}
 
-	const team = (
-		await db
-			.insert(schema.tTeams)
-			.values({
-				id: crypto.randomUUID(),
-				displayName,
-				createdBy: userId,
-				createdAt: new Date(),
-			})
-			.returning()
-	)[0];
+	const team = await dao.createTeam({ userId, displayName });
 
-	const membership = (
-		await db
-			.insert(schema.tMemberships)
-			.values({
-				id: crypto.randomUUID(),
-				userId,
-				teamId: team.id,
-				role: schema.membershipRoles.admin,
-				createdBy: userId,
-				createdAt: new Date(),
-			})
-			.returning()
-	)[0];
+	const membership = await dao.upsertMembership(team.id, userId, schema.membershipRoles.admin);
 
 	return {
 		team,

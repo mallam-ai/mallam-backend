@@ -1,7 +1,5 @@
 import { ActionHandler } from '../types';
 import * as schema from '../../schema-main';
-import { drizzle } from 'drizzle-orm/d1';
-import { sql, and, isNull, eq, inArray } from 'drizzle-orm';
 import { halt } from '../utils';
 import { DAO } from '../dao';
 
@@ -57,8 +55,6 @@ export const membership_remove: ActionHandler = async function (
 	}
 
 	const dao = new DAO(env);
-
-	const db = drizzle(env.DB_MAIN, { schema });
 
 	await dao.mustTeam(teamId);
 

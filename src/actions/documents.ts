@@ -1,6 +1,5 @@
 import { ActionHandler } from '../types';
 import * as schema from '../../schema-main';
-import { drizzle } from 'drizzle-orm/d1';
 import { invokeStanzaSentenceSegmentation } from '../utils';
 import { chunk } from 'lodash';
 import { Ai } from '@cloudflare/ai';
