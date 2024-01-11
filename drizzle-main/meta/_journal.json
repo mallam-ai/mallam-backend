@@ -29,6 +29,13 @@
       "when": 1704946822424,
       "tag": "0003_first_thunderball",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1704965119786,
+      "tag": "0004_stiff_hobgoblin",
+      "breakpoints": true
     }
   ]
 }

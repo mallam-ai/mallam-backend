@@ -198,6 +198,7 @@ export class DAO {
 					id: crypto.randomUUID(),
 					teamId,
 					isPublic: false,
+					isAnalyzed: false,
 					title,
 					content,
 					createdBy,
@@ -221,12 +222,35 @@ export class DAO {
 					teamId: document.teamId,
 					sequenceId,
 					content,
+					isAnalyzed: false,
 					createdBy: document.createdBy,
 					createdAt: new Date(),
 				})
 				.onConflictDoNothing()
 				.returning()
 		)[0];
+	}
+
+	async markDocumentAnalyzed(documentId: string, isAnalyzed: boolean) {
+		await this.db.update(schema.tDocuments).set({ isAnalyzed }).where(eq(schema.tDocuments.id, documentId));
+	}
+
+	async markSentenceAnalyzed(sentenceId: string, isAnalyzed: boolean) {
+		await this.db.update(schema.tSentences).set({ isAnalyzed }).where(eq(schema.tSentences.id, sentenceId));
+	}
+
+	async updateDocumentAnalyzed(documentId: string) {
+		const record = (
+			await this.db
+				.select({
+					count: sql<number>`count(${schema.tSentences.id})`,
+				})
+				.from(schema.tSentences)
+				.where(and(eq(schema.tSentences.documentId, documentId), eq(schema.tSentences.isAnalyzed, false)))
+		)[0];
+		if (record.count === 0) {
+			await this.markDocumentAnalyzed(documentId, true);
+		}
 	}
 
 	async getSentenceIds(documentId: string) {

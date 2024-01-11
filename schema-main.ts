@@ -104,6 +104,8 @@ export const tDocuments = sqliteTable(
 		teamId: text('team_id').notNull(),
 		// public
 		isPublic: integer('is_public', { mode: 'boolean' }).notNull(),
+		// analyzied
+		isAnalyzed: integer('is_analyzed', { mode: 'boolean' }).notNull().default(false),
 		// title of document
 		title: text('title').notNull(),
 		// content of document
@@ -132,6 +134,8 @@ export const tSentences = sqliteTable(
 		documentId: text('document_id').notNull(),
 		// sequence id, from 0 to n, -1 for title
 		sequenceId: integer('sequence_id').notNull(),
+		// analyzied
+		isAnalyzed: integer('is_analyzed', { mode: 'boolean' }).notNull().default(false),
 		// content of document
 		content: text('content').notNull(),
 		// created by

@@ -20,6 +20,11 @@ export const document_analyze: ActionHandler = async function (
 	// get document
 	const document = await dao.mustDocument(documentId);
 
+	if (document.isAnalyzed) {
+		await dao.markDocumentAnalyzed(document.id, false);
+		document.isAnalyzed = false;
+	}
+
 	// invoke stanza
 	const sentenceTexts = await invokeStanzaSentenceSegmentation(env, document.content);
 
@@ -98,6 +103,10 @@ export const sentence_analyze: ActionHandler = async function (
 			},
 		},
 	]);
+
+	await dao.markSentenceAnalyzed(sentence.id, true);
+
+	await dao.updateDocumentAnalyzed(documentId);
 
 	return {};
 };
