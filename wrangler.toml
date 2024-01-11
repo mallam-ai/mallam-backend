@@ -27,3 +27,7 @@ queue = "mallam-datasets-vectorize-sentences-upsert"
 [[vectorize]]
 binding = "VECTORIZE_DATASETS_SENTENCES"
 index_name = "mallam-datasets-sentences"
+
+[[vectorize]]
+binding = "VECTORIZE_MAIN_SENTENCES"
+index_name = "mallam-main-sentences"
