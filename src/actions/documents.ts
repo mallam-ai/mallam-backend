@@ -111,6 +111,31 @@ export const sentence_analyze: ActionHandler = async function (
 	return {};
 };
 
+export const document_list: ActionHandler = async function (
+	{ env },
+	{
+		userId,
+		teamId,
+		offset,
+		limit,
+	}: {
+		userId: string;
+		teamId: string;
+		offset: number;
+		limit: number;
+	}
+) {
+	const dao = new DAO(env);
+
+	await dao.mustTeam(teamId);
+
+	await dao.mustMembership(teamId, userId);
+
+	return {
+		documents: await dao.listDocuments(teamId, { offset, limit }),
+	};
+};
+
 export const document_create: ActionHandler = async function (
 	{ env },
 	{

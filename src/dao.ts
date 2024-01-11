@@ -1,6 +1,6 @@
 import * as schema from '../schema-main';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, isNull, inArray, sql } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql, asc, desc } from 'drizzle-orm';
 import { Bindings } from './types';
 import { halt } from './utils';
 
@@ -206,6 +206,15 @@ export class DAO {
 				})
 				.returning()
 		)[0];
+	}
+
+	async listDocuments(teamId: string, { offset, limit }: { offset: number; limit: number }) {
+		await this.db.query.tDocuments.findMany({
+			where: eq(schema.tDocuments.teamId, teamId),
+			orderBy: [desc(schema.tDocuments.createdAt)],
+			offset,
+			limit,
+		});
 	}
 
 	async createSentence(

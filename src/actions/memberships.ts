@@ -79,7 +79,7 @@ export const membership_list: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin, schema.membershipRoles.member, schema.membershipRoles.viewer);
+	await dao.mustMembership(teamId, userId);
 
 	const memberships = await dao.listMembershipWithUser(teamId);
 
