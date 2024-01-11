@@ -7,6 +7,23 @@ import { DAO } from '../dao';
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
+export const document_get: ActionHandler = async function (
+	{ env },
+	{
+		userId,
+		documentId,
+	}: {
+		userId: string;
+		documentId: string;
+	}
+) {
+	const dao = new DAO(env);
+	const document = await dao.mustDocument(documentId);
+	const team = await dao.mustTeam(document.teamId);
+	await dao.mustMembership(team.id, userId);
+	return { document };
+};
+
 export const document_analyze: ActionHandler = async function (
 	{ env },
 	{
