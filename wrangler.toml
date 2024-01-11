@@ -23,6 +23,20 @@ queue = "mallam-datasets-vectorize-sentences-upsert"
 [[queues.consumers]]
 queue = "mallam-datasets-vectorize-sentences-upsert"
 
+[[queues.producers]]
+binding = "QUEUE_MAIN_DOCUMENT_ANALYZE"
+queue = "mallam-main-document-analyze"
+
+[[queues.consumers]]
+queue = "mallam-main-document-analyze"
+
+[[queues.producers]]
+binding = "QUEUE_MAIN_SENTENCE_ANALYZE"
+queue = "mallam-main-sentence-analyze"
+
+[[queues.consumers]]
+queue = "mallam-main-sentence-analyze"
+
 
 [[vectorize]]
 binding = "VECTORIZE_DATASETS_SENTENCES"
