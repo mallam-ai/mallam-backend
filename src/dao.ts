@@ -221,7 +221,7 @@ export class DAO {
 	}
 
 	async listDocuments(teamId: string, { offset, limit }: { offset: number; limit: number }) {
-		await this.db.query.tDocuments.findMany({
+		return await this.db.query.tDocuments.findMany({
 			where: eq(schema.tDocuments.teamId, teamId),
 			orderBy: [desc(schema.tDocuments.createdAt)],
 			offset,
