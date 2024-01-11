@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 // app route - /invoke/:action
 app.post('/invoke/:action', async (c) => {
-	if (c.req.query('secret_key') !== c.env.SECRET_KEY) {
+	if (c.req.query('secret_key') !== c.env.SECRET_KEY && c.req.header('X-Secret-Key') !== c.env.SECRET_KEY) {
 		halt('/invoke/:action: secret key is not valid');
 	}
 
@@ -64,5 +64,5 @@ export default {
 				})
 			)
 		);
-	}
+	},
 };
