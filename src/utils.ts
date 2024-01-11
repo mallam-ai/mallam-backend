@@ -1,4 +1,5 @@
-import { TokenPayload } from './types';
+import { Bindings, TokenPayload } from './types';
+import { Env } from './types';
 
 /**
  * wait for ms, Promise version of setTimeout
@@ -270,4 +271,21 @@ export async function decodeJWT(s: string, userAgent: string, secret: string): P
 export function isDebugURL(url: string): boolean {
 	const u = new URL(url);
 	return u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+}
+
+export async function invokeStanzaSentenceSegmentation(env: Bindings, text: string): Promise<Array<string>> {
+	const res = await fetch('https://mallam-ai-stanza.hf.space/sentence_segmentation', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'X-Secret-Key': env.STANZA_SECRET_KEY,
+		},
+		body: JSON.stringify({ document: text }),
+	});
+	if (!res.ok) {
+		throw new Error('failed to invoke stanza sentence segmentation');
+	}
+	const data = (await res.json()) as { sentences: Array<string> };
+
+	return data.sentences;
 }

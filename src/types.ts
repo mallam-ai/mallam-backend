@@ -7,6 +7,8 @@ export type Bindings = {
 
 	QUEUE_DATASETS_VECTORIZE_SENTENCES_UPSERT: Queue;
 
+	STANZA_SECRET_KEY: string;
+
 	DB_MAIN: D1Database;
 	DB_DATASETS: D1Database;
 
