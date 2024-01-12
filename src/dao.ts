@@ -290,7 +290,7 @@ export class DAO {
 	}
 
 	async updateDocumentAnalyzed(documentId: string) {
-		const record = (
+		const rowAnalyzing = (
 			await this.db
 				.select({
 					count: sql<number>`count(${schema.tSentences.id})`,
@@ -298,9 +298,17 @@ export class DAO {
 				.from(schema.tSentences)
 				.where(and(eq(schema.tSentences.documentId, documentId), eq(schema.tSentences.isAnalyzed, false)))
 		)[0];
-		if (record.count === 0) {
-			await this.markDocumentAnalyzed(documentId, true);
-		}
+
+		const rowAnalyzed = (
+			await this.db
+				.select({
+					count: sql<number>`count(${schema.tSentences.id})`,
+				})
+				.from(schema.tSentences)
+				.where(and(eq(schema.tSentences.documentId, documentId), eq(schema.tSentences.isAnalyzed, true)))
+		)[0];
+
+		await this.markDocumentAnalyzed(documentId, rowAnalyzing.count === 0 && rowAnalyzed.count > 0);
 	}
 
 	async getAnalyzingSentenceIds({ limit }: { limit?: number }) {

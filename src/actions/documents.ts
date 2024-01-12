@@ -184,8 +184,6 @@ export const sentence_analyze: ActionHandler = async function (
 
 	await dao.markSentenceAnalyzed(sentence.id, true);
 
-	await dao.updateDocumentAnalyzed(sentence.documentId);
-
 	return {};
 };
 
