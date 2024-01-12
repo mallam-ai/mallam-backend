@@ -1,6 +1,6 @@
 import * as schema from '../schema-main';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, isNull, inArray, sql, asc, desc } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql, asc, desc, gt } from 'drizzle-orm';
 import { Bindings } from './types';
 import { halt } from './utils';
 
@@ -301,6 +301,19 @@ export class DAO {
 		if (record.count === 0) {
 			await this.markDocumentAnalyzed(documentId, true);
 		}
+	}
+
+	async getAnalyzingSentenceIds({ limit }: { limit?: number }) {
+		const sentences = await this.db
+			.select({
+				id: schema.tSentences.id,
+			})
+			.from(schema.tSentences)
+			.where(eq(schema.tSentences.isAnalyzed, false))
+			.orderBy(asc(schema.tSentences.createdAt))
+			.limit(limit ?? 10);
+
+		return sentences.map((s) => s.id);
 	}
 
 	async getSentenceIds(documentId: string) {
