@@ -244,6 +244,16 @@ export class DAO {
 		});
 	}
 
+	async mustSentence(id: string) {
+		const sentence = await this.db.query.tSentences.findFirst({
+			where: eq(schema.tSentences.id, id),
+		});
+		if (!sentence) {
+			halt(`sentence ${id} not found`, 404);
+		}
+		return sentence;
+	}
+
 	async createSentence(
 		document: Awaited<ReturnType<typeof this.mustDocument>>,
 		{ sequenceId, content }: { sequenceId: number; content: string }

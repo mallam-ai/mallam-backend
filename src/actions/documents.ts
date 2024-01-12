@@ -137,22 +137,31 @@ export const document_analyze: ActionHandler = async function (
 
 export const sentence_analyze: ActionHandler = async function (
 	{ env },
-	{ documentId, sequenceId, content }: { documentId: string; sequenceId: number; content: string }
+	{ sentenceId, documentId, sequenceId, content }: { sentenceId?: string; documentId?: string; sequenceId?: number; content?: string }
 ) {
-	if (content.trim().length === 0) {
-		return;
-	}
-
 	const dao = new DAO(env);
 
-	const document = await dao.mustDocument(documentId);
+	let sentence: Awaited<ReturnType<typeof dao.mustSentence>>;
 
-	const sentence = await dao.createSentence(document, { sequenceId, content });
+	if (sentenceId) {
+		sentence = await dao.mustSentence(sentenceId);
+	} else if (documentId && sequenceId && content) {
+		content = content.trim();
+
+		if (!content) {
+			return;
+		}
+
+		const document = await dao.mustDocument(documentId);
+		sentence = await dao.createSentence(document, { sequenceId, content });
+	} else {
+		return;
+	}
 
 	const ai = new Ai(env.AI);
 
 	const { data } = await ai.run(MODEL_EMBEDDINGS, {
-		text: [content],
+		text: [sentence.content],
 	});
 
 	const values = data[0];
@@ -165,17 +174,17 @@ export const sentence_analyze: ActionHandler = async function (
 		{
 			id: sentence.id,
 			values,
-			namespace: document.teamId,
+			namespace: sentence.teamId,
 			metadata: {
-				documentId,
-				sequenceId,
+				documentId: sentence.documentId,
+				sequenceId: sentence.sequenceId,
 			},
 		},
 	]);
 
 	await dao.markSentenceAnalyzed(sentence.id, true);
 
-	await dao.updateDocumentAnalyzed(documentId);
+	await dao.updateDocumentAnalyzed(sentence.documentId);
 
 	return {};
 };
