@@ -37,6 +37,15 @@ app.onError((e, c) => {
 export default {
 	fetch: app.fetch,
 
+	async scheduled(event: ScheduledEvent, env: Bindings, ctx: ExecutionContext): Promise<void> {
+		const fn = getActionHandler('scheduled');
+		if (!fn) {
+			console.log('scheduled: no action matched for: scheduled');
+			return;
+		}
+		await fn({ env, ctx }, {});
+	},
+
 	async queue(batch: MessageBatch<any>, env: Bindings, ctx: ExecutionContext): Promise<void> {
 		// wait till all messages are processed
 		ctx.waitUntil(

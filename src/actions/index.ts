@@ -7,6 +7,7 @@ import { chat } from './chat';
 import { ping } from './ping';
 import { membership_list, membership_remove, membership_add } from './memberships';
 import { document_get, document_create, document_list, document_analyze, sentence_analyze, document_update } from './documents';
+import { scheduled } from './scheduled';
 
 const ACTIONS = {
 	ping,
@@ -31,6 +32,8 @@ const ACTIONS = {
 	document_create,
 	document_list,
 	document_update,
+	// scheduled
+	scheduled,
 	// queues
 	'queue-mallam-datasets-vectorize-sentences-upsert': datasets_vectorize_sentences_upsert,
 	'queue-mallam-main-document-analyze': document_analyze,

@@ -6,6 +6,9 @@ routes = [{ pattern = "api.mallam.ai", custom_domain = true }]
 [ai]
 binding = "AI"
 
+[triggers]
+crons = ["* * * * *"]
+
 [[d1_databases]]
 binding = "DB_MAIN"
 database_name = "mallam-main"

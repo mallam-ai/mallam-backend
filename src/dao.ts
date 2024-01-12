@@ -208,6 +208,15 @@ export class DAO {
 		)[0];
 	}
 
+	async getAnalyzingDocumentIds({ limit }: { limit?: number }) {
+		const rows = await this.db
+			.select({ id: schema.tDocuments.id })
+			.from(schema.tDocuments)
+			.where(eq(schema.tDocuments.isAnalyzed, false))
+			.limit(limit ?? 10);
+		return rows.map((r) => r.id);
+	}
+
 	async countDocuments(teamId: string) {
 		const count = (
 			await this.db
