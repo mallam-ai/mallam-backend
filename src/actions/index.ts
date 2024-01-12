@@ -6,7 +6,15 @@ import { team_create, team_list, team_get, team_delete, team_update, team_leave 
 import { chat } from './chat';
 import { ping } from './ping';
 import { membership_list, membership_remove, membership_add } from './memberships';
-import { document_get, document_create, document_list, document_analyze, sentence_analyze, document_update } from './documents';
+import {
+	document_get,
+	document_create,
+	document_list,
+	document_analyze,
+	sentence_analyze,
+	document_update,
+	document_delete,
+} from './documents';
 import { scheduled } from './scheduled';
 
 const ACTIONS = {
@@ -32,6 +40,7 @@ const ACTIONS = {
 	document_create,
 	document_list,
 	document_update,
+	document_delete,
 	// scheduled
 	scheduled,
 	// queues

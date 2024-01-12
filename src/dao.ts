@@ -183,11 +183,17 @@ export class DAO {
 	}
 
 	async mustDocument(documentId: string) {
-		const document = await this.db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
+		const document = await this.db.query.tDocuments.findFirst({
+			where: and(eq(schema.tDocuments.id, documentId), isNull(schema.tDocuments.deletedAt)),
+		});
 		if (!document) {
 			halt(`document ${documentId} not found`, 404);
 		}
 		return document;
+	}
+
+	async deleteDocument(documentId: string) {
+		await this.db.update(schema.tDocuments).set({ deletedAt: new Date() }).where(eq(schema.tDocuments.id, documentId));
 	}
 
 	async createDocument({ teamId, title, content, createdBy }: { teamId: string; title: string; content: string; createdBy: string }) {
@@ -212,7 +218,7 @@ export class DAO {
 		const rows = await this.db
 			.select({ id: schema.tDocuments.id })
 			.from(schema.tDocuments)
-			.where(eq(schema.tDocuments.isAnalyzed, false))
+			.where(and(eq(schema.tDocuments.isAnalyzed, false), isNull(schema.tDocuments.deletedAt)))
 			.limit(limit ?? 10);
 		return rows.map((r) => r.id);
 	}
@@ -224,14 +230,14 @@ export class DAO {
 					value: sql<number>`count(${schema.tDocuments.id})`,
 				})
 				.from(schema.tDocuments)
-				.where(eq(schema.tDocuments.teamId, teamId))
+				.where(and(eq(schema.tDocuments.teamId, teamId), isNull(schema.tDocuments.deletedAt)))
 		)[0];
 		return count.value;
 	}
 
 	async listDocuments(teamId: string, { offset, limit }: { offset: number; limit: number }) {
 		return await this.db.query.tDocuments.findMany({
-			where: eq(schema.tDocuments.teamId, teamId),
+			where: and(eq(schema.tDocuments.teamId, teamId), isNull(schema.tDocuments.deletedAt)),
 			orderBy: [desc(schema.tDocuments.createdAt)],
 			offset,
 			limit,

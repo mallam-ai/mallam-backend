@@ -114,12 +114,15 @@ export const tDocuments = sqliteTable(
 		createdBy: text('created_by').notNull(),
 		// created at
 		createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+		// deletedAt
+		deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
 	},
 	(documents) => ({
 		idx_documents_team_id: index('idx_documents_team_id').on(documents.teamId),
 		idx_documents_is_public: index('idx_documents_is_public').on(documents.isPublic),
 		idx_documents_created_by: index('idx_documents_created_by').on(documents.createdBy),
 		idx_documents_created_at: index('idx_documents_created_at').on(documents.createdAt),
+		idx_documents_deleted_at: index('idx_documents_deleted_at').on(documents.deletedAt),
 	})
 );
 

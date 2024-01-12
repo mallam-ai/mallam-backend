@@ -7,6 +7,27 @@ import { DAO } from '../dao';
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
+export const document_delete: ActionHandler = async function (
+	{ env },
+	{
+		documentId,
+		userId,
+	}: {
+		documentId: string;
+		userId: string;
+	}
+) {
+	const dao = new DAO(env);
+	const document = await dao.mustDocument(documentId);
+	const team = await dao.mustTeam(document.teamId);
+	await dao.mustMembership(team.id, userId, schema.membershipRoles.admin, schema.membershipRoles.member);
+	const sentenceIds = await dao.getSentenceIds(documentId);
+	await Promise.all(chunk(sentenceIds, 10).map((sentenceIds) => env.VECTORIZE_MAIN_SENTENCES.deleteByIds(sentenceIds)));
+	await dao.deleteSentences(documentId);
+	await dao.deleteDocument(document.id);
+	return {};
+};
+
 export const document_get: ActionHandler = async function (
 	{ env },
 	{
