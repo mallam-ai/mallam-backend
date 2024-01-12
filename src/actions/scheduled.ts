@@ -5,7 +5,7 @@ import { ActionHandler } from '../types';
 export const scheduled: ActionHandler = async ({ env }, {}) => {
 	const dao = new DAO(env);
 
-	// reanalyze sentences
+	// re-analyze sentences
 	const analyzingSentenceIds = await dao.getAnalyzingSentenceIds({ limit: 30 });
 	await Promise.all(
 		chunk(analyzingSentenceIds, 10).map(async (sentenceIds) =>
@@ -13,7 +13,7 @@ export const scheduled: ActionHandler = async ({ env }, {}) => {
 		)
 	);
 
-	// update analyzing documents
+	// update document isAnalyzed
 	const analyzingDocumentIds = await dao.getAnalyzingDocumentIds({ limit: 30 });
 	await Promise.all(analyzingDocumentIds.map((documentId) => dao.updateDocumentAnalyzed(documentId)));
 };

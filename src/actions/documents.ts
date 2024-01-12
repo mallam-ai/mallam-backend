@@ -65,7 +65,11 @@ export const document_update: ActionHandler = async function (
 
 	await dao.mustMembership(team.id, userId);
 
+	await dao.deleteSentences(documentId);
+
 	await dao.updateDocument(document.id, { title, content });
+
+	await env.QUEUE_MAIN_DOCUMENT_ANALYZE.send({ documentId }, { contentType: 'json' });
 
 	return {
 		document: Object.assign(document, {
@@ -89,41 +93,23 @@ export const document_analyze: ActionHandler = async function (
 	// get document
 	const document = await dao.mustDocument(documentId);
 
-	if (document.isAnalyzed) {
-		await dao.markDocumentAnalyzed(document.id, false);
-		document.isAnalyzed = false;
-	}
-
 	// invoke stanza
 	const sentenceTexts = await invokeStanzaSentenceSegmentation(env, document.content);
 
-	// delete old sentences
-	{
-		const sentenceIds = await dao.getSentenceIds(documentId);
-
-		// delete from vectorize database
-		await Promise.all(
-			chunk(sentenceIds, 10).map((sentenceIds) => {
-				return env.VECTORIZE_MAIN_SENTENCES.deleteByIds(sentenceIds);
-			})
-		);
-
-		await dao.deleteSentences(documentId);
-	}
-
 	// create new sentences
-	const tasks = sentenceTexts.map((content, i) => ({
-		documentId,
-		sequenceId: i,
-		content,
-	}));
-
-	// include title
-	tasks.push({
-		documentId,
-		sequenceId: -1,
-		content: document.title,
-	});
+	const tasks = sentenceTexts
+		.map((content, i) => ({
+			documentId,
+			sequenceId: i,
+			content,
+		}))
+		.concat([
+			{
+				documentId,
+				sequenceId: -1,
+				content: document.title,
+			},
+		]);
 
 	// send to queue
 	await Promise.all(
