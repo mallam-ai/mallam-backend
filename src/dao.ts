@@ -269,7 +269,7 @@ export class DAO {
 			.where(eq(schema.tDocuments.id, documentId));
 	}
 
-	async updateDocumentStatus(documentId: string, status: number) {
+	async updateDocumentStatus(documentId: string, status: string) {
 		await this.db.update(schema.tDocuments).set({ status }).where(eq(schema.tDocuments.id, documentId));
 	}
 

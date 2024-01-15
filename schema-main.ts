@@ -96,10 +96,10 @@ export const rMemberships = relations(tMemberships, ({ one }) => ({
 }));
 
 export const DOCUMENT_STATUS = {
-	CREATED: 0,
-	SEGMENTED: 1,
-	ANALYZED: 2,
-	FAILED: 99,
+	CREATED: 'created',
+	SEGMENTED: 'segmented',
+	ANALYZED: 'analyzed',
+	FAILED: 'failed',
 };
 
 export const tDocuments = sqliteTable(
@@ -110,7 +110,7 @@ export const tDocuments = sqliteTable(
 		// repo name
 		teamId: text('team_id').notNull(),
 		// status
-		status: integer('status').notNull().default(0),
+		status: text('status').notNull().default(DOCUMENT_STATUS.CREATED),
 		// title of document
 		title: text('title').notNull(),
 		// content of document

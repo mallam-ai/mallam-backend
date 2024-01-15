@@ -1,7 +1,7 @@
 CREATE TABLE `documents` (
 	`id` text PRIMARY KEY NOT NULL,
 	`team_id` text NOT NULL,
-	`status` integer DEFAULT 0 NOT NULL,
+	`status` text DEFAULT 'created' NOT NULL,
 	`title` text NOT NULL,
 	`content` text NOT NULL,
 	`created_by` text NOT NULL,

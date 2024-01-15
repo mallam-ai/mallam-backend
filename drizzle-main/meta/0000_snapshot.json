@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "ec7ccbd4-e6fa-4bd2-9c4a-1ca2f1cbf5b5",
+  "id": "a713edf3-0de0-4470-ab04-7cb04005f251",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "documents": {
@@ -23,11 +23,11 @@
         },
         "status": {
           "name": "status",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 0
+          "default": "'created'"
         },
         "title": {
           "name": "title",
