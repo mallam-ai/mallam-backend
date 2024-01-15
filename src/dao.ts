@@ -225,18 +225,6 @@ export class DAO {
 		return count.value;
 	}
 
-	async countSentences(documentId: string) {
-		const count = (
-			await this.db
-				.select({
-					value: sql<number>`count(${schema.tDocuments.id})`,
-				})
-				.from(schema.tSentences)
-				.where(eq(schema.tSentences.documentId, documentId))
-		)[0];
-		return count.value;
-	}
-
 	async listDocuments(teamId: string, { offset, limit }: { offset: number; limit: number }) {
 		return await this.db.query.tDocuments.findMany({
 			where: and(eq(schema.tDocuments.teamId, teamId), isNull(schema.tDocuments.deletedAt)),
@@ -244,16 +232,6 @@ export class DAO {
 			offset,
 			limit,
 		});
-	}
-
-	async mustSentence(id: string) {
-		const sentence = await this.db.query.tSentences.findFirst({
-			where: eq(schema.tSentences.id, id),
-		});
-		if (!sentence) {
-			halt(`sentence ${id} not found`, 404);
-		}
-		return sentence;
 	}
 
 	async createSentences(
@@ -284,29 +262,6 @@ export class DAO {
 		return rows;
 	}
 
-	async createSentence(
-		document: Awaited<ReturnType<typeof this.mustDocument>>,
-		{ sequenceId, content }: { sequenceId: number; content: string }
-	) {
-		const id = `${document.id}-${sequenceId}`;
-		return (
-			await this.db
-				.insert(schema.tSentences)
-				.values({
-					id,
-					documentId: document.id,
-					teamId: document.teamId,
-					sequenceId,
-					content,
-					isAnalyzed: false,
-					createdBy: document.createdBy,
-					createdAt: new Date(),
-				})
-				.onConflictDoNothing()
-				.returning()
-		)[0];
-	}
-
 	async resetDocument(documentId: string, { title, content }: { title: string; content: string }) {
 		await this.db
 			.update(schema.tDocuments)
@@ -320,19 +275,6 @@ export class DAO {
 
 	async updateSentenceAnalyzed(sentenceId: string, isAnalyzed: boolean) {
 		await this.db.update(schema.tSentences).set({ isAnalyzed }).where(eq(schema.tSentences.id, sentenceId));
-	}
-
-	async getAnalyzingSentenceIds({ limit }: { limit?: number }) {
-		const sentences = await this.db
-			.select({
-				id: schema.tSentences.id,
-			})
-			.from(schema.tSentences)
-			.where(eq(schema.tSentences.isAnalyzed, false))
-			.orderBy(asc(schema.tSentences.createdAt))
-			.limit(limit ?? 10);
-
-		return sentences.map((s) => s.id);
 	}
 
 	async getSentenceIds(documentId: string) {
