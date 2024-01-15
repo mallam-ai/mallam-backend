@@ -14,18 +14,6 @@ binding = "DB_MAIN"
 database_name = "mallam-main"
 database_id = "8ea16b21-7de0-4cd1-9a65-cf3d049639c0"
 
-[[d1_databases]]
-binding = "DB_DATASETS"
-database_name = "mallam-datasets"
-database_id = "1fdbbadc-27c4-4fee-88d7-9d6d930c3f49"
-
-[[queues.producers]]
-binding = "QUEUE_DATASETS_VECTORIZE_SENTENCES_UPSERT"
-queue = "mallam-datasets-vectorize-sentences-upsert"
-
-[[queues.consumers]]
-queue = "mallam-datasets-vectorize-sentences-upsert"
-
 [[queues.producers]]
 binding = "QUEUE_MAIN_DOCUMENT_ANALYZE"
 queue = "mallam-main-document-analyze"
