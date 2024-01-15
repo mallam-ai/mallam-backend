@@ -16,11 +16,11 @@ export const document_search: ActionHandler = async function (
 	{
 		teamId,
 		userId,
-		text,
+		content,
 	}: {
 		teamId: string;
 		userId: string;
-		text: string;
+		content: string;
 	}
 ) {
 	const dao = new DAO(env);
@@ -28,7 +28,7 @@ export const document_search: ActionHandler = async function (
 	await dao.mustMembership(team.id, userId);
 
 	const ai = new Ai(env.AI);
-	const { data } = await ai.run(MODEL_EMBEDDINGS, { text: [text] });
+	const { data } = await ai.run(MODEL_EMBEDDINGS, { text: [content] });
 	if (!data) {
 		throw new Error('Failed to search');
 	}
@@ -38,7 +38,9 @@ export const document_search: ActionHandler = async function (
 		topK: SEARCH_TOP_K,
 	});
 
-	const sentencesIds = query.matches.filter((vec) => vec.score > SEARCH_SIMILARITY_CUTOFF).map((vec: any) => vec.id || vec.vectorId);
+	const sentencesIds = query.matches
+		.filter((vec) => vec.score > SEARCH_SIMILARITY_CUTOFF)
+		.map((vec) => vec.id || ((vec as any).vectorId as string));
 
 	if (sentencesIds.length === 0) {
 		return { documents: [] };

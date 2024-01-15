@@ -326,6 +326,8 @@ export class DAO {
 			});
 			results.push(Object.assign({}, document, { sentences }));
 		}
+
+		return results;
 	}
 
 	async deleteSentences(documentId: string) {
