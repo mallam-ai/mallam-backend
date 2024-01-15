@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1704791683864,
-      "tag": "0000_light_ogun",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1704805836513,
-      "tag": "0001_silky_the_anarchist",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1704807173348,
-      "tag": "0002_cooing_robin_chapel",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1704946822424,
-      "tag": "0003_first_thunderball",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1704965119786,
-      "tag": "0004_stiff_hobgoblin",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1705026820877,
-      "tag": "0005_awesome_alex_power",
+      "when": 1705300112854,
+      "tag": "0000_vengeful_sister_grimm",
       "breakpoints": true
     }
   ]

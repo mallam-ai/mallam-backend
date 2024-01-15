@@ -3,6 +3,7 @@ import { DAO } from '../dao';
 import { ActionHandler } from '../types';
 
 export const scheduled: ActionHandler = async ({ env }, {}) => {
+	/*
 	const dao = new DAO(env);
 
 	// re-analyze sentences
@@ -16,4 +17,5 @@ export const scheduled: ActionHandler = async ({ env }, {}) => {
 	// update document isAnalyzed
 	const analyzingDocumentIds = await dao.getAnalyzingDocumentIds({ limit: 30 });
 	await Promise.all(analyzingDocumentIds.map((documentId) => dao.updateDocumentAnalyzed(documentId)));
+	*/
 };

@@ -21,7 +21,7 @@ export const membership_add: ActionHandler = async function (
 		halt(`cannot add yourself`, 403);
 	}
 
-	if ([schema.membershipRoles.member, schema.membershipRoles.viewer].indexOf(role) === -1) {
+	if ([schema.MEMBERSHIP_ROLE.MEMBER, schema.MEMBERSHIP_ROLE.VIEWER].indexOf(role) === -1) {
 		halt(`invalid role ${role}`, 400);
 	}
 
@@ -29,7 +29,7 @@ export const membership_add: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin);
+	await dao.mustMembership(teamId, userId, schema.MEMBERSHIP_ROLE.ADMIN);
 
 	await dao.mustUser(targetUserId);
 
@@ -58,7 +58,7 @@ export const membership_remove: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin);
+	await dao.mustMembership(teamId, userId, schema.MEMBERSHIP_ROLE.ADMIN);
 
 	await dao.deleteMembership(teamId, targetUserId);
 

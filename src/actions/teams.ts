@@ -19,7 +19,7 @@ export const team_leave: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.member, schema.membershipRoles.viewer);
+	await dao.mustMembership(teamId, userId, schema.MEMBERSHIP_ROLE.MEMBER, schema.MEMBERSHIP_ROLE.VIEWER);
 
 	await dao.deleteMembership(teamId, userId);
 
@@ -42,7 +42,7 @@ export const team_update: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin);
+	await dao.mustMembership(teamId, userId, schema.MEMBERSHIP_ROLE.ADMIN);
 
 	await dao.updateTeam(teamId, { displayName });
 
@@ -63,7 +63,7 @@ export const team_delete: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin);
+	await dao.mustMembership(teamId, userId, schema.MEMBERSHIP_ROLE.ADMIN);
 
 	await dao.deleteTeam(teamId);
 
@@ -134,7 +134,7 @@ export const team_create: ActionHandler = async function (
 
 	const team = await dao.createTeam({ userId, displayName });
 
-	const membership = await dao.upsertMembership(team.id, userId, schema.membershipRoles.admin);
+	const membership = await dao.upsertMembership(team.id, userId, schema.MEMBERSHIP_ROLE.ADMIN);
 
 	return {
 		team,

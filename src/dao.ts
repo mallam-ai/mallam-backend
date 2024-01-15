@@ -335,6 +335,13 @@ export class DAO {
 		return sentences.map((s) => s.id);
 	}
 
+	async listSentences(documentId: string) {
+		return await this.db.query.tSentences.findMany({
+			where: eq(schema.tSentences.documentId, documentId),
+			orderBy: [asc(schema.tSentences.sequenceId)],
+		});
+	}
+
 	async deleteSentences(documentId: string) {
 		await this.db.delete(schema.tSentences).where(eq(schema.tSentences.documentId, documentId));
 	}

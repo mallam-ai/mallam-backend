@@ -20,7 +20,7 @@ export const document_delete: ActionHandler = async function (
 	const dao = new DAO(env);
 	const document = await dao.mustDocument(documentId);
 	const team = await dao.mustTeam(document.teamId);
-	await dao.mustMembership(team.id, userId, schema.membershipRoles.admin, schema.membershipRoles.member);
+	await dao.mustMembership(team.id, userId, schema.MEMBERSHIP_ROLE.ADMIN, schema.MEMBERSHIP_ROLE.MEMBER);
 	const sentenceIds = await dao.getSentenceIds(documentId);
 	await Promise.all(chunk(sentenceIds, 10).map((sentenceIds) => env.VECTORIZE_MAIN_SENTENCES.deleteByIds(sentenceIds)));
 	await dao.deleteSentences(documentId);
@@ -42,7 +42,12 @@ export const document_get: ActionHandler = async function (
 	const document = await dao.mustDocument(documentId);
 	const team = await dao.mustTeam(document.teamId);
 	await dao.mustMembership(team.id, userId);
-	return { document };
+	const sentences = await dao.listSentences(documentId);
+	return {
+		document: Object.assign(document, {
+			sentences: sentences.map((s) => s.content),
+		}),
+	};
 };
 
 export const document_update: ActionHandler = async function (
@@ -219,7 +224,7 @@ export const document_create: ActionHandler = async function (
 
 	await dao.mustTeam(teamId);
 
-	await dao.mustMembership(teamId, userId, schema.membershipRoles.admin, schema.membershipRoles.member);
+	await dao.mustMembership(teamId, userId, schema.MEMBERSHIP_ROLE.ADMIN, schema.MEMBERSHIP_ROLE.MEMBER);
 
 	const document = await dao.createDocument({ teamId, title, content, createdBy: userId });
 

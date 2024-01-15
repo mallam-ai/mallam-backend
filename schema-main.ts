@@ -44,10 +44,10 @@ export const tTeams = sqliteTable(
 	})
 );
 
-export const membershipRoles = {
-	admin: 'admin',
-	member: 'member',
-	viewer: 'viewer',
+export const MEMBERSHIP_ROLE = {
+	ADMIN: 'admin',
+	MEMBER: 'member',
+	VIEWER: 'viewer',
 };
 
 export const tMemberships = sqliteTable(
@@ -95,6 +95,12 @@ export const rMemberships = relations(tMemberships, ({ one }) => ({
 	}),
 }));
 
+export const DOCUMENT_STATUS = {
+	CREATED: 0,
+	ANALYZING: 1,
+	ANALYZED: 2,
+};
+
 export const tDocuments = sqliteTable(
 	'documents',
 	{
@@ -106,6 +112,8 @@ export const tDocuments = sqliteTable(
 		isPublic: integer('is_public', { mode: 'boolean' }).notNull(),
 		// analyzied
 		isAnalyzed: integer('is_analyzed', { mode: 'boolean' }).notNull().default(false),
+		// status
+		status: integer('status').notNull().default(0),
 		// title of document
 		title: text('title').notNull(),
 		// content of document
@@ -120,6 +128,7 @@ export const tDocuments = sqliteTable(
 	(documents) => ({
 		idx_documents_team_id: index('idx_documents_team_id').on(documents.teamId),
 		idx_documents_is_public: index('idx_documents_is_public').on(documents.isPublic),
+		idx_documents_status: index('idx_documents_status').on(documents.status),
 		idx_documents_created_by: index('idx_documents_created_by').on(documents.createdBy),
 		idx_documents_created_at: index('idx_documents_created_at').on(documents.createdAt),
 		idx_documents_deleted_at: index('idx_documents_deleted_at').on(documents.deletedAt),
