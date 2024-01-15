@@ -45,9 +45,7 @@ export const document_get: ActionHandler = async function (
 	const sentences = await dao.listSentences(documentId);
 	return {
 		document: Object.assign(document, {
-			sentences: sentences.map((s) => s.content),
-			sentencesAnalyzed: sentences.filter((s) => s.isAnalyzed).length,
-			sentencesNotAnalyzed: sentences.filter((s) => !s.isAnalyzed).length,
+			sentences,
 		}),
 	};
 };
