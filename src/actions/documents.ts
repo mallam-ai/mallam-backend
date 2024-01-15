@@ -8,7 +8,7 @@ import { DAO } from '../dao';
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
 const SEARCH_SIMILARITY_CUTOFF = 0.75;
-const SEARCH_TOP_K = 2;
+const SEARCH_TOP_K = 5;
 const SEARCH_CONTEXT_SIZE = 2;
 
 export const document_search: ActionHandler = async function (
