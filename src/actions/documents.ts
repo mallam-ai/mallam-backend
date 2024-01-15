@@ -46,6 +46,8 @@ export const document_get: ActionHandler = async function (
 	return {
 		document: Object.assign(document, {
 			sentences: sentences.map((s) => s.content),
+			sentencesAnalyzed: sentences.filter((s) => s.isAnalyzed).length,
+			sentencesNotAnalyzed: sentences.filter((s) => !s.isAnalyzed).length,
 		}),
 	};
 };
@@ -232,8 +234,6 @@ export const document_update: ActionHandler = async function (
 	const team = await dao.mustTeam(document.teamId);
 
 	await dao.mustMembership(team.id, userId, schema.MEMBERSHIP_ROLE.ADMIN, schema.MEMBERSHIP_ROLE.MEMBER);
-
-	await dao.deleteSentences(document.id);
 
 	await dao.resetDocument(document.id, { title, content });
 
