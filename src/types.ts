@@ -10,7 +10,6 @@ export type Bindings = {
 	STANZA_SECRET_KEY: string;
 
 	DB_MAIN: D1Database;
-	DB_DATASETS: D1Database;
 
 	GITHUB_CLIENT_ID: string;
 	GITHUB_CLIENT_SECRET: string;

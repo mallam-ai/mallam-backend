@@ -27,11 +27,6 @@ max_retries = 5
 queue = "mallam-main-document-analysis-failed"
 max_retries = 5
 
-
-[[vectorize]]
-binding = "VECTORIZE_DATASETS_SENTENCES"
-index_name = "mallam-datasets-sentences"
-
 [[vectorize]]
 binding = "VECTORIZE_MAIN_SENTENCES"
 index_name = "mallam-main-sentences"
