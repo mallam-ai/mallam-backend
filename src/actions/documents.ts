@@ -40,6 +40,7 @@ export const document_search: ActionHandler = async function (
 
 	const sentencesIds = query.matches
 		.filter((vec) => vec.score > SEARCH_SIMILARITY_CUTOFF)
+		.sort((a, b) => b.score - a.score)
 		.map((vec) => vec.id || ((vec as any).vectorId as string));
 
 	if (sentencesIds.length === 0) {

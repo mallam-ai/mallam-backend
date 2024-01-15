@@ -305,9 +305,9 @@ export class DAO {
 
 		type Document = Awaited<ReturnType<typeof this.mustDocument>>;
 
-		type Sentences = Awaited<ReturnType<typeof this.listSentences>>;
+		type Sentence = Awaited<ReturnType<typeof this.listSentences>>[0] & { highlighted: boolean };
 
-		const results: Array<Document & { sentences: Sentences }> = [];
+		const results: Array<Document & { sentences: Sentence[] }> = [];
 
 		for (const documentId of Object.keys(sentenceGroups)) {
 			const document = await this.db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
@@ -324,7 +324,15 @@ export class DAO {
 					)
 				),
 			});
-			results.push(Object.assign({}, document, { sentences }));
+			results.push(
+				Object.assign({}, document, {
+					sentences: sentences.map((s) =>
+						Object.assign({}, s, {
+							highlighted: sentenceIds.includes(s.id),
+						})
+					),
+				})
+			);
 		}
 
 		return results;
