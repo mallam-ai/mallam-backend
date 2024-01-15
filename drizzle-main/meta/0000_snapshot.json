@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "76dc13a2-b796-4af1-a392-fc6ba315c7d1",
+  "id": "ec7ccbd4-e6fa-4bd2-9c4a-1ca2f1cbf5b5",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "documents": {
@@ -20,21 +20,6 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "is_public": {
-          "name": "is_public",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "is_analyzed": {
-          "name": "is_analyzed",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
         },
         "status": {
           "name": "status",
@@ -85,13 +70,6 @@
           "name": "idx_documents_team_id",
           "columns": [
             "team_id"
-          ],
-          "isUnique": false
-        },
-        "idx_documents_is_public": {
-          "name": "idx_documents_is_public",
-          "columns": [
-            "is_public"
           ],
           "isUnique": false
         },

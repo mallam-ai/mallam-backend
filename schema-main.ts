@@ -97,8 +97,9 @@ export const rMemberships = relations(tMemberships, ({ one }) => ({
 
 export const DOCUMENT_STATUS = {
 	CREATED: 0,
-	ANALYZING: 1,
+	SEGMENTED: 1,
 	ANALYZED: 2,
+	FAILED: 99,
 };
 
 export const tDocuments = sqliteTable(
@@ -108,10 +109,6 @@ export const tDocuments = sqliteTable(
 		id: text('id').primaryKey(),
 		// repo name
 		teamId: text('team_id').notNull(),
-		// public
-		isPublic: integer('is_public', { mode: 'boolean' }).notNull(),
-		// analyzied
-		isAnalyzed: integer('is_analyzed', { mode: 'boolean' }).notNull().default(false),
 		// status
 		status: integer('status').notNull().default(0),
 		// title of document
@@ -127,7 +124,6 @@ export const tDocuments = sqliteTable(
 	},
 	(documents) => ({
 		idx_documents_team_id: index('idx_documents_team_id').on(documents.teamId),
-		idx_documents_is_public: index('idx_documents_is_public').on(documents.isPublic),
 		idx_documents_status: index('idx_documents_status').on(documents.status),
 		idx_documents_created_by: index('idx_documents_created_by').on(documents.createdBy),
 		idx_documents_created_at: index('idx_documents_created_at').on(documents.createdAt),

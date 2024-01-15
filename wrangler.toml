@@ -15,19 +15,16 @@ database_name = "mallam-main"
 database_id = "8ea16b21-7de0-4cd1-9a65-cf3d049639c0"
 
 [[queues.producers]]
-binding = "QUEUE_MAIN_DOCUMENT_ANALYZE"
-queue = "mallam-main-document-analyze"
+binding = "QUEUE_MAIN_DOCUMENT_ANALYSIS"
+queue = "mallam-main-document-analysis"
 
 [[queues.consumers]]
-queue = "mallam-main-document-analyze"
+queue = "mallam-main-document-analysis"
+dead_letter_queue = "mallam-main-document-analysis-failed"
 max_retries = 5
 
-[[queues.producers]]
-binding = "QUEUE_MAIN_SENTENCE_ANALYZE"
-queue = "mallam-main-sentence-analyze"
-
 [[queues.consumers]]
-queue = "mallam-main-sentence-analyze"
+queue = "mallam-main-document-analysis-failed"
 max_retries = 5
 
 

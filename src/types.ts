@@ -3,12 +3,9 @@ export type Bindings = {
 
 	AI: any;
 
-	VECTORIZE_DATASETS_SENTENCES: VectorizeIndex;
 	VECTORIZE_MAIN_SENTENCES: VectorizeIndex;
 
-	QUEUE_DATASETS_VECTORIZE_SENTENCES_UPSERT: Queue;
-	QUEUE_MAIN_DOCUMENT_ANALYZE: Queue<{ documentId: string }>;
-	QUEUE_MAIN_SENTENCE_ANALYZE: Queue<{ sentenceId?: string; documentId?: string; sequenceId?: number; content?: string }>;
+	QUEUE_MAIN_DOCUMENT_ANALYSIS: Queue<{ documentId: string }>;
 
 	STANZA_SECRET_KEY: string;
 

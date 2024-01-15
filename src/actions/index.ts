@@ -8,10 +8,10 @@ import {
 	document_get,
 	document_create,
 	document_list,
-	document_analyze,
-	sentence_analyze,
 	document_update,
 	document_delete,
+	document_analysis,
+	document_analysis_failed,
 } from './documents';
 import { scheduled } from './scheduled';
 
@@ -37,8 +37,8 @@ const ACTIONS = {
 	document_delete,
 	// scheduled
 	scheduled,
-	'queue-mallam-main-document-analyze': document_analyze,
-	'queue-mallam-main-sentence-analyze': sentence_analyze,
+	'queue-mallam-main-document-analysis': document_analysis,
+	'queue-mallam-main-document-analysis-failed': document_analysis_failed,
 };
 
 /**

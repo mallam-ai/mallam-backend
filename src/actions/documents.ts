@@ -1,7 +1,7 @@
 import { ActionHandler } from '../types';
 import * as schema from '../../schema-main';
 import { invokeStanzaSentenceSegmentation } from '../utils';
-import { chunk } from 'lodash';
+import { chunk, flatten } from 'lodash';
 import { Ai } from '@cloudflare/ai';
 import { DAO } from '../dao';
 
@@ -50,42 +50,7 @@ export const document_get: ActionHandler = async function (
 	};
 };
 
-export const document_update: ActionHandler = async function (
-	{ env },
-	{
-		userId,
-		documentId,
-		title,
-		content,
-	}: {
-		userId: string;
-		documentId: string;
-		title: string;
-		content: string;
-	}
-) {
-	const dao = new DAO(env);
-	const document = await dao.mustDocument(documentId);
-	const team = await dao.mustTeam(document.teamId);
-
-	await dao.mustMembership(team.id, userId);
-
-	await dao.deleteSentences(documentId);
-
-	await dao.updateDocument(document.id, { title, content });
-
-	await env.QUEUE_MAIN_DOCUMENT_ANALYZE.send({ documentId }, { contentType: 'json' });
-
-	return {
-		document: Object.assign(document, {
-			content,
-			title,
-			isAnalyzed: false,
-		}),
-	};
-};
-
-export const document_analyze: ActionHandler = async function (
+export const document_analysis_failed: ActionHandler = async function (
 	{ env },
 	{
 		documentId,
@@ -95,85 +60,98 @@ export const document_analyze: ActionHandler = async function (
 ) {
 	const dao = new DAO(env);
 
-	// get document
-	const document = await dao.mustDocument(documentId);
-
-	// invoke stanza
-	const sentenceTexts = await invokeStanzaSentenceSegmentation(env, document.content);
-
-	// create new sentences
-	const tasks = sentenceTexts
-		.map((content, i) => ({
-			documentId,
-			sequenceId: i,
-			content,
-		}))
-		.concat([
-			{
-				documentId,
-				sequenceId: -1,
-				content: document.title,
-			},
-		]);
-
-	// send to queue
-	await Promise.all(
-		chunk(tasks, 10).map((tasks) => {
-			return env.QUEUE_MAIN_SENTENCE_ANALYZE.sendBatch(tasks.map((body) => ({ body, contentType: 'json' })));
-		})
-	);
-
-	return {};
+	await dao.updateDocumentStatus(documentId, schema.DOCUMENT_STATUS.FAILED);
 };
 
-export const sentence_analyze: ActionHandler = async function (
+export const document_analysis: ActionHandler = async function (
 	{ env },
-	{ sentenceId, documentId, sequenceId, content }: { sentenceId?: string; documentId?: string; sequenceId?: number; content?: string }
+	{
+		documentId,
+	}: {
+		documentId: string;
+	}
 ) {
 	const dao = new DAO(env);
 
-	let sentence: Awaited<ReturnType<typeof dao.mustSentence>>;
+	const document = await dao.mustDocument(documentId);
 
-	if (sentenceId) {
-		sentence = await dao.mustSentence(sentenceId);
-	} else if (documentId && sequenceId && content) {
-		content = content.trim();
-
-		if (!content) {
-			return;
-		}
-
-		const document = await dao.mustDocument(documentId);
-		sentence = await dao.createSentence(document, { sequenceId, content });
-	} else {
+	if (document.status === schema.DOCUMENT_STATUS.ANALYZED || document.status === schema.DOCUMENT_STATUS.FAILED) {
 		return;
 	}
 
-	const ai = new Ai(env.AI);
+	let sentences = await dao.listSentences(document.id);
 
-	const { data } = await ai.run(MODEL_EMBEDDINGS, {
-		text: [sentence.content],
-	});
+	// CREATED -> SEGMENTED
+	if (document.status === schema.DOCUMENT_STATUS.CREATED) {
+		// deleting existing sentences
+		{
+			const sentenceIds = sentences.map((s) => s.id);
+			await Promise.all(chunk(sentenceIds, 10).map((sentenceIds) => env.VECTORIZE_MAIN_SENTENCES.deleteByIds(sentenceIds)));
+			await dao.deleteSentences(document.id);
+		}
 
-	const values = data[0];
+		// segmenting sentences
+		const sentenceContents = await invokeStanzaSentenceSegmentation(env, document.content);
 
-	if (!values) {
-		throw new Error(`Failed to vectorize sentence ${sentence.id}`);
+		const sentencePartials = sentenceContents
+			.map((content) => content.trim())
+			.filter((content) => content)
+			.map((content, i) => ({
+				sequenceId: i,
+				content,
+			}))
+			.concat([
+				{
+					sequenceId: -1,
+					content: document.title,
+				},
+			]);
+
+		// creating sentences
+		sentences = flatten(await Promise.all(chunk(sentencePartials, 10).map((sentences) => dao.createSentences(document, sentences))));
+
+		// update status
+		await dao.updateDocumentStatus(documentId, schema.DOCUMENT_STATUS.SEGMENTED);
+		document.status = schema.DOCUMENT_STATUS.SEGMENTED;
 	}
 
-	await env.VECTORIZE_MAIN_SENTENCES.upsert([
-		{
-			id: sentence.id,
-			values,
-			namespace: sentence.teamId,
-			metadata: {
-				documentId: sentence.documentId,
-				sequenceId: sentence.sequenceId,
-			},
-		},
-	]);
+	// SEGMENTED -> ANALYZED
+	if (document.status === schema.DOCUMENT_STATUS.SEGMENTED) {
+		const ai = new Ai(env.AI);
 
-	await dao.markSentenceAnalyzed(sentence.id, true);
+		await Promise.all(
+			sentences
+				.filter((s) => !s.isAnalyzed)
+				.map(async (sentence) => {
+					const { data } = await ai.run(MODEL_EMBEDDINGS, {
+						text: [sentence.content],
+					});
+
+					const values = data[0];
+
+					if (!values) {
+						throw new Error(`Failed to vectorize sentence ${sentence.id}`);
+					}
+
+					await env.VECTORIZE_MAIN_SENTENCES.upsert([
+						{
+							id: sentence.id,
+							values,
+							namespace: sentence.teamId,
+							metadata: {
+								documentId: sentence.documentId,
+								sequenceId: sentence.sequenceId,
+							},
+						},
+					]);
+
+					await dao.updateSentenceAnalyzed(sentence.id, true);
+				})
+		);
+
+		await dao.updateDocumentStatus(documentId, schema.DOCUMENT_STATUS.ANALYZED);
+		document.status = schema.DOCUMENT_STATUS.ANALYZED;
+	}
 
 	return {};
 };
@@ -228,14 +206,44 @@ export const document_create: ActionHandler = async function (
 
 	const document = await dao.createDocument({ teamId, title, content, createdBy: userId });
 
-	await env.QUEUE_MAIN_DOCUMENT_ANALYZE.send(
-		{
-			documentId: document.id,
-		},
-		{
-			contentType: 'json',
-		}
-	);
+	await env.QUEUE_MAIN_DOCUMENT_ANALYSIS.send({ documentId: document.id }, { contentType: 'json' });
 
 	return { document };
+};
+
+export const document_update: ActionHandler = async function (
+	{ env },
+	{
+		userId,
+		documentId,
+		title,
+		content,
+	}: {
+		userId: string;
+		documentId: string;
+		title: string;
+		content: string;
+	}
+) {
+	const dao = new DAO(env);
+
+	const document = await dao.mustDocument(documentId);
+
+	const team = await dao.mustTeam(document.teamId);
+
+	await dao.mustMembership(team.id, userId, schema.MEMBERSHIP_ROLE.ADMIN, schema.MEMBERSHIP_ROLE.MEMBER);
+
+	await dao.deleteSentences(document.id);
+
+	await dao.resetDocument(document.id, { title, content });
+
+	await env.QUEUE_MAIN_DOCUMENT_ANALYSIS.send({ documentId: document.id }, { contentType: 'json' });
+
+	return {
+		document: Object.assign(document, {
+			content,
+			title,
+			status: schema.DOCUMENT_STATUS.CREATED,
+		}),
+	};
 };

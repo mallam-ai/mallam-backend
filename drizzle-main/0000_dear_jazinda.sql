@@ -1,8 +1,6 @@
 CREATE TABLE `documents` (
 	`id` text PRIMARY KEY NOT NULL,
 	`team_id` text NOT NULL,
-	`is_public` integer NOT NULL,
-	`is_analyzed` integer DEFAULT false NOT NULL,
 	`status` integer DEFAULT 0 NOT NULL,
 	`title` text NOT NULL,
 	`content` text NOT NULL,
@@ -48,7 +46,6 @@ CREATE TABLE `users` (
 );
 --> statement-breakpoint
 CREATE INDEX `idx_documents_team_id` ON `documents` (`team_id`);--> statement-breakpoint
-CREATE INDEX `idx_documents_is_public` ON `documents` (`is_public`);--> statement-breakpoint
 CREATE INDEX `idx_documents_status` ON `documents` (`status`);--> statement-breakpoint
 CREATE INDEX `idx_documents_created_by` ON `documents` (`created_by`);--> statement-breakpoint
 CREATE INDEX `idx_documents_created_at` ON `documents` (`created_at`);--> statement-breakpoint

@@ -203,24 +203,14 @@ export class DAO {
 				.values({
 					id: crypto.randomUUID(),
 					teamId,
-					isPublic: false,
-					isAnalyzed: false,
 					title,
 					content,
+					status: schema.DOCUMENT_STATUS.CREATED,
 					createdBy,
 					createdAt: new Date(),
 				})
 				.returning()
 		)[0];
-	}
-
-	async getAnalyzingDocumentIds({ limit }: { limit?: number }) {
-		const rows = await this.db
-			.select({ id: schema.tDocuments.id })
-			.from(schema.tDocuments)
-			.where(and(eq(schema.tDocuments.isAnalyzed, false), isNull(schema.tDocuments.deletedAt)))
-			.limit(limit ?? 10);
-		return rows.map((r) => r.id);
 	}
 
 	async countDocuments(teamId: string) {
@@ -231,6 +221,18 @@ export class DAO {
 				})
 				.from(schema.tDocuments)
 				.where(and(eq(schema.tDocuments.teamId, teamId), isNull(schema.tDocuments.deletedAt)))
+		)[0];
+		return count.value;
+	}
+
+	async countSentences(documentId: string) {
+		const count = (
+			await this.db
+				.select({
+					value: sql<number>`count(${schema.tDocuments.id})`,
+				})
+				.from(schema.tSentences)
+				.where(eq(schema.tSentences.documentId, documentId))
 		)[0];
 		return count.value;
 	}
@@ -252,6 +254,34 @@ export class DAO {
 			halt(`sentence ${id} not found`, 404);
 		}
 		return sentence;
+	}
+
+	async createSentences(
+		document: {
+			id: string;
+			teamId: string;
+			createdBy: string;
+		},
+		sentences: Array<{ sequenceId: number; content: string }>
+	) {
+		const rows = await this.db
+			.insert(schema.tSentences)
+			.values(
+				sentences.map((s) => ({
+					id: `${document.id}-${s.sequenceId}`,
+					documentId: document.id,
+					teamId: document.teamId,
+					sequenceId: s.sequenceId,
+					content: s.content,
+					isAnalyzed: false,
+					createdBy: document.createdBy,
+					createdAt: new Date(),
+				}))
+			)
+			.onConflictDoNothing()
+			.returning();
+
+		return rows;
 	}
 
 	async createSentence(
@@ -277,38 +307,19 @@ export class DAO {
 		)[0];
 	}
 
-	async updateDocument(documentId: string, { title, content }: { title: string; content: string }) {
-		await this.db.update(schema.tDocuments).set({ title, content, isAnalyzed: false }).where(eq(schema.tDocuments.id, documentId));
+	async resetDocument(documentId: string, { title, content }: { title: string; content: string }) {
+		await this.db
+			.update(schema.tDocuments)
+			.set({ title, content, status: schema.DOCUMENT_STATUS.CREATED })
+			.where(eq(schema.tDocuments.id, documentId));
 	}
 
-	async markDocumentAnalyzed(documentId: string, isAnalyzed: boolean) {
-		await this.db.update(schema.tDocuments).set({ isAnalyzed }).where(eq(schema.tDocuments.id, documentId));
+	async updateDocumentStatus(documentId: string, status: number) {
+		await this.db.update(schema.tDocuments).set({ status }).where(eq(schema.tDocuments.id, documentId));
 	}
 
-	async markSentenceAnalyzed(sentenceId: string, isAnalyzed: boolean) {
+	async updateSentenceAnalyzed(sentenceId: string, isAnalyzed: boolean) {
 		await this.db.update(schema.tSentences).set({ isAnalyzed }).where(eq(schema.tSentences.id, sentenceId));
-	}
-
-	async updateDocumentAnalyzed(documentId: string) {
-		const rowAnalyzing = (
-			await this.db
-				.select({
-					count: sql<number>`count(${schema.tSentences.id})`,
-				})
-				.from(schema.tSentences)
-				.where(and(eq(schema.tSentences.documentId, documentId), eq(schema.tSentences.isAnalyzed, false)))
-		)[0];
-
-		const rowAnalyzed = (
-			await this.db
-				.select({
-					count: sql<number>`count(${schema.tSentences.id})`,
-				})
-				.from(schema.tSentences)
-				.where(and(eq(schema.tSentences.documentId, documentId), eq(schema.tSentences.isAnalyzed, true)))
-		)[0];
-
-		await this.markDocumentAnalyzed(documentId, rowAnalyzing.count === 0 && rowAnalyzed.count > 0);
 	}
 
 	async getAnalyzingSentenceIds({ limit }: { limit?: number }) {
