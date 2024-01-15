@@ -1,8 +1,9 @@
 import * as schema from '../schema-main';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, isNull, inArray, sql, asc, desc, gt } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql, asc, desc, gt, or, gte, lte } from 'drizzle-orm';
 import { Bindings } from './types';
 import { halt } from './utils';
+import { groupBy } from 'lodash';
 
 function dirzzleMain(env: Bindings) {
 	return drizzle(env.DB_MAIN, { schema });
@@ -293,6 +294,38 @@ export class DAO {
 			where: eq(schema.tSentences.documentId, documentId),
 			orderBy: [asc(schema.tSentences.sequenceId)],
 		});
+	}
+
+	async listDocumentsWithSentenceIds(sentenceIds: string[], { contextSize }: { contextSize: number }) {
+		const sentences = await this.db.query.tSentences.findMany({
+			where: inArray(schema.tSentences.id, sentenceIds),
+		});
+
+		const sentenceGroups = groupBy(sentences, 'documentId');
+
+		type Document = Awaited<ReturnType<typeof this.mustDocument>>;
+
+		type Sentences = Awaited<ReturnType<typeof this.listSentences>>;
+
+		const results: Array<Document & { sentences: Sentences }> = [];
+
+		for (const documentId of Object.keys(sentenceGroups)) {
+			const document = await this.db.query.tDocuments.findFirst({ where: eq(schema.tDocuments.id, documentId) });
+			const sentences = await this.db.query.tSentences.findMany({
+				where: and(
+					eq(schema.tSentences.documentId, documentId),
+					or(
+						...sentenceGroups[documentId].map((record) =>
+							and(
+								gte(schema.tSentences.sequenceId, record.sequenceId - contextSize),
+								lte(schema.tSentences.sequenceId, record.sequenceId + contextSize)
+							)
+						)
+					)
+				),
+			});
+			results.push(Object.assign({}, document, { sentences }));
+		}
 	}
 
 	async deleteSentences(documentId: string) {

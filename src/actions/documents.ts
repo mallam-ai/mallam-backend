@@ -7,6 +7,48 @@ import { DAO } from '../dao';
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
 
+const SEARCH_SIMILARITY_CUTOFF = 0.75;
+const SEARCH_TOP_K = 2;
+const SEARCH_CONTEXT_SIZE = 2;
+
+export const document_search: ActionHandler = async function (
+	{ env },
+	{
+		teamId,
+		userId,
+		text,
+	}: {
+		teamId: string;
+		userId: string;
+		text: string;
+	}
+) {
+	const dao = new DAO(env);
+	const team = await dao.mustTeam(teamId);
+	await dao.mustMembership(team.id, userId);
+
+	const ai = new Ai(env.AI);
+	const { data } = await ai.run(MODEL_EMBEDDINGS, { text: [text] });
+	if (!data) {
+		throw new Error('Failed to search');
+	}
+
+	const query = await env.VECTORIZE_MAIN_SENTENCES.query(data[0], {
+		namespace: teamId,
+		topK: SEARCH_TOP_K,
+	});
+
+	const sentencesIds = query.matches.filter((vec) => vec.score > SEARCH_SIMILARITY_CUTOFF).map((vec: any) => vec.id || vec.vectorId);
+
+	if (sentencesIds.length === 0) {
+		return { documents: [] };
+	}
+
+	return {
+		documents: await dao.listDocumentsWithSentenceIds(sentencesIds, { contextSize: SEARCH_CONTEXT_SIZE }),
+	};
+};
+
 export const document_delete: ActionHandler = async function (
 	{ env },
 	{
