@@ -21,7 +21,7 @@ queue = "mallam-main-document-analysis"
 [[queues.consumers]]
 queue = "mallam-main-document-analysis"
 dead_letter_queue = "mallam-main-document-analysis-failed"
-max_retries = 5
+max_retries = 10
 
 [[queues.consumers]]
 queue = "mallam-main-document-analysis-failed"
