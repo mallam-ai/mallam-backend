@@ -274,6 +274,10 @@ export class DAO {
 		await this.db.update(schema.tDocuments).set({ status }).where(eq(schema.tDocuments.id, documentId));
 	}
 
+	async updateDocumentsStatus(documentIds: string[], status: string) {
+		await this.db.update(schema.tDocuments).set({ status }).where(inArray(schema.tDocuments.id, documentIds));
+	}
+
 	async updateSentenceAnalyzed(sentenceId: string, isAnalyzed: boolean) {
 		await this.db.update(schema.tSentences).set({ isAnalyzed }).where(eq(schema.tSentences.id, sentenceId));
 	}
@@ -294,6 +298,13 @@ export class DAO {
 			where: eq(schema.tSentences.documentId, documentId),
 			orderBy: [asc(schema.tSentences.sequenceId)],
 		});
+	}
+
+	async listDocumentsFailedToAnalyze(teamId: string) {
+		return this.db
+			.select({ id: schema.tDocuments.id })
+			.from(schema.tDocuments)
+			.where(and(eq(schema.tDocuments.teamId, teamId), eq(schema.tDocuments.status, schema.DOCUMENT_STATUS.FAILED)));
 	}
 
 	async listDocumentsWithSentenceIds(sentenceIds: string[], { contextSize }: { contextSize: number }) {

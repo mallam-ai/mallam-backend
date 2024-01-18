@@ -13,6 +13,7 @@ import {
 	document_analysis,
 	document_analysis_failed,
 	document_search,
+	document_retry_failed,
 } from './documents';
 import { scheduled } from './scheduled';
 
@@ -37,6 +38,7 @@ const ACTIONS = {
 	document_update,
 	document_delete,
 	document_search,
+	document_retry_failed,
 	// scheduled
 	scheduled,
 	'queue-mallam-main-document-analysis': document_analysis,

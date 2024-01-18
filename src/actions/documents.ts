@@ -11,6 +11,39 @@ const SEARCH_SIMILARITY_CUTOFF = 0.75;
 const SEARCH_TOP_K = 5;
 const SEARCH_CONTEXT_SIZE = 2;
 
+export const document_retry_failed: ActionHandler = async function (
+	{ env },
+	{
+		teamId,
+		userId,
+	}: {
+		teamId: string;
+		userId: string;
+	}
+) {
+	const dao = new DAO(env);
+	const team = await dao.mustTeam(teamId);
+	await dao.mustMembership(team.id, userId, schema.MEMBERSHIP_ROLE.ADMIN, schema.MEMBERSHIP_ROLE.MEMBER);
+	const documents = await dao.listDocumentsFailedToAnalyze(teamId);
+	const documentIds = documents.map((d) => d.id);
+
+	await Promise.all(
+		chunk(documents).map(async (documents) => {
+			await dao.updateDocumentsStatus(documentIds, schema.DOCUMENT_STATUS.CREATED);
+			await env.QUEUE_MAIN_DOCUMENT_ANALYSIS.sendBatch(
+				documentIds.map((id) => ({
+					body: {
+						documentId: id,
+					},
+					contentType: 'json',
+				}))
+			);
+		})
+	);
+
+	return {};
+};
+
 export const document_search: ActionHandler = async function (
 	{ env },
 	{
