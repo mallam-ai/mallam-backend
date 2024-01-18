@@ -8,6 +8,13 @@
       "when": 1705308756353,
       "tag": "0000_gifted_lord_tyger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1705587681882,
+      "tag": "0001_rare_xavin",
+      "breakpoints": true
     }
   ]
 }
