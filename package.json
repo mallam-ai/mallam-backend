@@ -8,16 +8,16 @@
     "start": "wrangler dev"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20231218.0",
+    "@cloudflare/workers-types": "^4.20240117.0",
     "typescript": "^5.3.3",
-    "wrangler": "^3.22.4"
+    "wrangler": "^3.23.0"
   },
   "dependencies": {
     "@cloudflare/ai": "^1.0.47",
     "@types/lodash": "^4.14.202",
-    "drizzle-kit": "^0.20.12",
+    "drizzle-kit": "^0.20.13",
     "drizzle-orm": "^0.29.3",
-    "hono": "^3.12.3",
+    "hono": "^3.12.6",
     "lodash": "^4.17.21"
   }
 }
