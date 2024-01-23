@@ -15,6 +15,13 @@
       "when": 1705587681882,
       "tag": "0001_rare_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1706017830822,
+      "tag": "0002_wealthy_senator_kelly",
+      "breakpoints": true
     }
   ]
 }

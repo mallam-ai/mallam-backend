@@ -16,7 +16,7 @@ import {
 	document_retry_failed,
 } from './documents';
 import { scheduled } from './scheduled';
-import { chats_list } from './chats';
+import { chat_create, chat_generation, chat_generation_failed, chat_list } from './chats';
 
 const ACTIONS = {
 	ping,
@@ -40,11 +40,15 @@ const ACTIONS = {
 	document_delete,
 	document_search,
 	document_retry_failed,
-	chats_list,
+	chat_create,
+	chat_list,
 	// scheduled
 	scheduled,
+	// queue
 	'queue-mallam-main-document-analysis': document_analysis,
 	'queue-mallam-main-document-analysis-failed': document_analysis_failed,
+	'queue-mallam-main-chat-generation': chat_generation,
+	'queue-mallam-main-chat-generation-failed': chat_generation_failed,
 };
 
 /**

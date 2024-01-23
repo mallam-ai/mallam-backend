@@ -235,6 +235,13 @@ export const HISTORY_ROLE = {
 	ASSISTANT: 'assistant',
 };
 
+export const HISTORY_STATUS = {
+	PENDING: 'pending',
+	GENERATING: 'generating',
+	GENERATED: 'generated',
+	FAILED: 'failed',
+};
+
 export const tHistories = sqliteTable(
 	'histories',
 	{
@@ -246,6 +253,8 @@ export const tHistories = sqliteTable(
 		userID: text('user_id').notNull(),
 		// chat id
 		chatId: text('chat_id').notNull(),
+		// status
+		status: text('status').notNull(),
 		// role
 		role: text('role').notNull(),
 		// content
@@ -258,6 +267,7 @@ export const tHistories = sqliteTable(
 		idx_histories_user_id: index('idx_histories_user_id').on(t.userID),
 		idx_histories_chat_id: index('idx_histories_chat_id').on(t.chatId),
 		idx_histories_role: index('idx_histories_role').on(t.role),
+		idx_histories_status: index('idx_histories_status').on(t.status),
 		idx_histories_created_at: index('idx_histories_created_at').on(t.createdAt),
 	})
 );

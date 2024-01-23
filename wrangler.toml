@@ -27,6 +27,19 @@ max_retries = 10
 queue = "mallam-main-document-analysis-failed"
 max_retries = 5
 
+[[queues.producers]]
+binding = "QUEUE_MAIN_CHAT_GENERATION"
+queue = "mallam-main-chat-generation"
+
+[[queues.consumers]]
+queue = "mallam-main-chat-generation"
+dead_letter_queue = "mallam-main-chat-generation-failed"
+max_retries = 10
+
+[[queues.consumers]]
+queue = "mallam-main-chat-generation-failed"
+max_retries = 5
+
 [[vectorize]]
 binding = "VECTORIZE_MAIN_SENTENCES"
 index_name = "mallam-main-sentences"

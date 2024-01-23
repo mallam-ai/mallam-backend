@@ -6,6 +6,7 @@ export type Bindings = {
 	VECTORIZE_MAIN_SENTENCES: VectorizeIndex;
 
 	QUEUE_MAIN_DOCUMENT_ANALYSIS: Queue<{ documentId: string }>;
+	QUEUE_MAIN_CHAT_GENERATION: Queue<{ historyId: string }>;
 
 	STANZA_SECRET_KEY: string;
 
