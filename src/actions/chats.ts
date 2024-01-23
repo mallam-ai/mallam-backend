@@ -1,9 +1,14 @@
 import { DAO } from '../dao';
+import * as schema from '../../schema-main';
 import { ActionHandler } from '../types';
 
 export const chat_generation: ActionHandler = async ({ env }, { historyId }: { historyId: string }) => {};
 
-export const chat_generation_failed: ActionHandler = async ({ env }, { historyId }: { historyId: string }) => {};
+export const chat_generation_failed: ActionHandler = async ({ env }, { historyId }: { historyId: string }) => {
+	const dao = new DAO(env);
+
+	await dao.updateHistoryStatus(historyId, schema.HISTORY_STATUS.FAILED);
+};
 
 export const chat_create: ActionHandler = async (
 	{ env },

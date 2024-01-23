@@ -370,6 +370,10 @@ export class DAO {
 		return results;
 	}
 
+	async updateHistoryStatus(historyId: string, status: string) {
+		await this.db.update(schema.tHistories).set({ status }).where(eq(schema.tHistories.id, historyId));
+	}
+
 	async deleteSentences(documentId: string) {
 		await this.db.delete(schema.tSentences).where(eq(schema.tSentences.documentId, documentId));
 	}
