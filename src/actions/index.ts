@@ -16,6 +16,7 @@ import {
 	document_retry_failed,
 } from './documents';
 import { scheduled } from './scheduled';
+import { chats_list } from './chats';
 
 const ACTIONS = {
 	ping,
@@ -39,6 +40,7 @@ const ACTIONS = {
 	document_delete,
 	document_search,
 	document_retry_failed,
+	chats_list,
 	// scheduled
 	scheduled,
 	'queue-mallam-main-document-analysis': document_analysis,

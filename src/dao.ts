@@ -226,6 +226,27 @@ export class DAO {
 		return count.value;
 	}
 
+	async countChats(teamId: string, userId: string) {
+		const count = (
+			await this.db
+				.select({
+					value: sql<number>`count(${schema.tChats.id})`,
+				})
+				.from(schema.tChats)
+				.where(and(eq(schema.tChats.userID, userId), eq(schema.tChats.teamId, teamId), isNull(schema.tChats.deletedAt)))
+		)[0];
+		return count.value;
+	}
+
+	async listChats(teamId: string, userId: string, { offset, limit }: { offset: number; limit: number }) {
+		return await this.db.query.tChats.findMany({
+			where: and(eq(schema.tChats.teamId, teamId), eq(schema.tChats.userID, userId), isNull(schema.tChats.deletedAt)),
+			orderBy: [desc(schema.tChats.createdAt)],
+			offset,
+			limit,
+		});
+	}
+
 	async listDocuments(teamId: string, { offset, limit }: { offset: number; limit: number }) {
 		return await this.db.query.tDocuments.findMany({
 			where: and(eq(schema.tDocuments.teamId, teamId), isNull(schema.tDocuments.deletedAt)),
