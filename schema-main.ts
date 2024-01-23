@@ -205,7 +205,7 @@ export const tChats = sqliteTable(
 		// repo name
 		teamId: text('team_id').notNull(),
 		// user id
-		userID: text('user_id').notNull(),
+		userId: text('user_id').notNull(),
 		// title
 		title: text('title').notNull(),
 		// created at
@@ -215,7 +215,7 @@ export const tChats = sqliteTable(
 	},
 	(t) => ({
 		idx_chats_team_id: index('idx_chats_team_id').on(t.teamId),
-		idx_chats_user_id: index('idx_chats_user_id').on(t.userID),
+		idx_chats_user_id: index('idx_chats_user_id').on(t.userId),
 		idx_chats_created_at: index('idx_chats_created_at').on(t.createdAt),
 		idx_chats_deleted_at: index('idx_chats_deleted_at').on(t.deletedAt),
 	})
@@ -236,6 +236,7 @@ export const HISTORY_ROLE = {
 };
 
 export const HISTORY_STATUS = {
+	NONE: 'none',
 	PENDING: 'pending',
 	GENERATING: 'generating',
 	GENERATED: 'generated',
@@ -250,7 +251,7 @@ export const tHistories = sqliteTable(
 		// repo name
 		teamId: text('team_id').notNull(),
 		// user id
-		userID: text('user_id').notNull(),
+		userId: text('user_id').notNull(),
 		// chat id
 		chatId: text('chat_id').notNull(),
 		// status
@@ -264,7 +265,7 @@ export const tHistories = sqliteTable(
 	},
 	(t) => ({
 		idx_histories_team_id: index('idx_histories_team_id').on(t.teamId),
-		idx_histories_user_id: index('idx_histories_user_id').on(t.userID),
+		idx_histories_user_id: index('idx_histories_user_id').on(t.userId),
 		idx_histories_chat_id: index('idx_histories_chat_id').on(t.chatId),
 		idx_histories_role: index('idx_histories_role').on(t.role),
 		idx_histories_status: index('idx_histories_status').on(t.status),

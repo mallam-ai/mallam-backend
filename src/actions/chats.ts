@@ -7,13 +7,19 @@ export const chat_generation_failed: ActionHandler = async ({ env }, { historyId
 
 export const chat_create: ActionHandler = async (
 	{ env },
-	{ teamId, userId, title, system, content }: { teamId: string; userId: string; title: string; system: string; content: string }
+	{ teamId, userId, title, context, input }: { teamId: string; userId: string; title: string; context: string; input: string }
 ) => {
 	const dao = new DAO(env);
 
 	await dao.mustTeam(teamId);
 
 	await dao.mustMembership(teamId, userId);
+
+	const { chat, assistantHistoryId } = await dao.createChat({ teamId, userId, title, context, input });
+
+	await env.QUEUE_MAIN_CHAT_GENERATION.send({ historyId: assistantHistoryId }, { contentType: 'json' });
+
+	return { chat };
 };
 
 export const chat_list: ActionHandler = async (

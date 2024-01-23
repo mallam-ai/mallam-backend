@@ -233,14 +233,14 @@ export class DAO {
 					value: sql<number>`count(${schema.tChats.id})`,
 				})
 				.from(schema.tChats)
-				.where(and(eq(schema.tChats.userID, userId), eq(schema.tChats.teamId, teamId), isNull(schema.tChats.deletedAt)))
+				.where(and(eq(schema.tChats.userId, userId), eq(schema.tChats.teamId, teamId), isNull(schema.tChats.deletedAt)))
 		)[0];
 		return count.value;
 	}
 
 	async listChats(teamId: string, userId: string, { offset, limit }: { offset: number; limit: number }) {
 		return await this.db.query.tChats.findMany({
-			where: and(eq(schema.tChats.teamId, teamId), eq(schema.tChats.userID, userId), isNull(schema.tChats.deletedAt)),
+			where: and(eq(schema.tChats.teamId, teamId), eq(schema.tChats.userId, userId), isNull(schema.tChats.deletedAt)),
 			orderBy: [desc(schema.tChats.createdAt)],
 			offset,
 			limit,
@@ -372,5 +372,103 @@ export class DAO {
 
 	async deleteSentences(documentId: string) {
 		await this.db.delete(schema.tSentences).where(eq(schema.tSentences.documentId, documentId));
+	}
+
+	async createChat({
+		teamId,
+		userId,
+		title,
+		context,
+		input,
+	}: {
+		teamId: string;
+		userId: string;
+		title: string;
+		context: string;
+		input: string;
+	}) {
+		let now = new Date();
+
+		const chat = (
+			await this.db
+				.insert(schema.tChats)
+				.values({
+					id: crypto.randomUUID(),
+					teamId,
+					userId,
+					title,
+					createdAt: now,
+				})
+				.returning()
+		)[0];
+
+		now = new Date(now.getTime() + 50);
+
+		if (context) {
+			const createdAt_1 = now;
+			now = new Date(now.getTime() + 50);
+			const createdAt_2 = now;
+			now = new Date(now.getTime() + 50);
+			await this.db
+				.insert(schema.tHistories)
+				.values([
+					{
+						id: crypto.randomUUID(),
+						teamId,
+						userId,
+						chatId: chat.id,
+						createdAt: createdAt_1,
+						role: schema.HISTORY_ROLE.SYSTEM,
+						status: schema.HISTORY_STATUS.NONE,
+						content: 'Context:\n' + context,
+					},
+					{
+						id: crypto.randomUUID(),
+						teamId,
+						userId,
+						chatId: chat.id,
+						createdAt: createdAt_2,
+						role: schema.HISTORY_ROLE.SYSTEM,
+						status: schema.HISTORY_STATUS.NONE,
+						content: `When answering the question or responding, use the context provided, if it is provided and relevant.`,
+					},
+				])
+				.returning();
+		}
+
+		const createdAt_1 = now;
+		now = new Date(now.getTime() + 50);
+		const createdAt_2 = now;
+		now = new Date(now.getTime() + 50);
+
+		const assistantHistoryId = crypto.randomUUID();
+
+		await this.db
+			.insert(schema.tHistories)
+			.values([
+				{
+					id: crypto.randomUUID(),
+					teamId,
+					userId,
+					chatId: chat.id,
+					createdAt: createdAt_1,
+					role: schema.HISTORY_ROLE.USER,
+					status: schema.HISTORY_STATUS.NONE,
+					content: input,
+				},
+				{
+					id: assistantHistoryId,
+					teamId,
+					userId,
+					chatId: chat.id,
+					createdAt: createdAt_2,
+					role: schema.HISTORY_ROLE.ASSISTANT,
+					status: schema.HISTORY_STATUS.PENDING,
+					content: '',
+				},
+			])
+			.returning();
+
+		return { chat, assistantHistoryId };
 	}
 }
