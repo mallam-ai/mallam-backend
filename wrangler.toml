@@ -35,6 +35,7 @@ queue = "mallam-main-chat-generation"
 queue = "mallam-main-chat-generation"
 dead_letter_queue = "mallam-main-chat-generation-failed"
 max_retries = 10
+max_batch_timeout = 1
 
 [[queues.consumers]]
 queue = "mallam-main-chat-generation-failed"
