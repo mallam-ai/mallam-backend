@@ -1,9 +1,9 @@
 import * as schema from '../schema-main';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, isNull, inArray, sql, asc, desc, gt, or, gte, lte } from 'drizzle-orm';
+import { eq, and, isNull, inArray, sql, asc, desc, gt, or, gte, lte, not } from 'drizzle-orm';
 import { Bindings } from './types';
 import { halt } from './utils';
-import { groupBy } from 'lodash';
+import { groupBy, lt } from 'lodash';
 
 function dirzzleMain(env: Bindings) {
 	return drizzle(env.DB_MAIN, { schema });
@@ -99,6 +99,26 @@ export class DAO {
 			halt(`user ${userId} not found`, 404);
 		}
 		return user;
+	}
+
+	async mustHistory(historyId: string) {
+		const history = await this.db.query.tHistories.findFirst({ where: eq(schema.tHistories.id, historyId) });
+		if (!history) {
+			halt(`history ${historyId} not found`, 404);
+		}
+		return history;
+	}
+
+	async listHistories(chatId: string, history: { id: string; createdAt: Date }) {
+		return await this.db.query.tHistories.findMany({
+			where: and(
+				eq(schema.tHistories.chatId, chatId),
+				lte(schema.tHistories.createdAt, history.createdAt),
+				not(eq(schema.tHistories.id, history.id))
+			),
+			orderBy: [asc(schema.tHistories.createdAt)],
+			limit: 20,
+		});
 	}
 
 	async listMembershipWithUser(teamId: string) {
@@ -372,6 +392,13 @@ export class DAO {
 
 	async updateHistoryStatus(historyId: string, status: string) {
 		await this.db.update(schema.tHistories).set({ status }).where(eq(schema.tHistories.id, historyId));
+	}
+
+	async updateHistoryContent(historyId: string, content: string) {
+		await this.db
+			.update(schema.tHistories)
+			.set({ status: schema.HISTORY_STATUS.GENERATED, content })
+			.where(eq(schema.tHistories.id, historyId));
 	}
 
 	async deleteSentences(documentId: string) {

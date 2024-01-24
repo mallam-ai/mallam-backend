@@ -16,7 +16,7 @@ import {
 	document_retry_failed,
 } from './documents';
 import { scheduled } from './scheduled';
-import { chat_create, chat_generation, chat_generation_failed, chat_list } from './chats';
+import { chat_create, chat_generation, chat_generation_failed, chat_list, history_regenerate } from './chats';
 
 const ACTIONS = {
 	ping,
@@ -42,6 +42,7 @@ const ACTIONS = {
 	document_retry_failed,
 	chat_create,
 	chat_list,
+	history_regenerate,
 	// scheduled
 	scheduled,
 	// queue
