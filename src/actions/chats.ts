@@ -105,7 +105,7 @@ export const chat_get: ActionHandler = async ({ env }, { chatId, userId }: { cha
 
 	const histories = await dao.listHistories(chatId);
 
-	return { chat, histories };
+	return { chat: Object.assign(chat, { histories }) };
 };
 
 export const chat_delete: ActionHandler = async ({ env }, { chatId, userId }: { chatId: string; userId: string }) => {
