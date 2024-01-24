@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, isNull, inArray, sql, asc, desc, gt, or, gte, lte, not } from 'drizzle-orm';
 import { Bindings } from './types';
 import { halt } from './utils';
-import { groupBy, lt } from 'lodash';
+import { create, groupBy, lt } from 'lodash';
 
 function dirzzleMain(env: Bindings) {
 	return drizzle(env.DB_MAIN, { schema });
@@ -101,6 +101,14 @@ export class DAO {
 		return user;
 	}
 
+	async mustChat(chatId: string) {
+		const chat = await this.db.query.tChats.findFirst({ where: and(eq(schema.tChats.id, chatId), isNull(schema.tChats.deletedAt)) });
+		if (!chat) {
+			halt(`chat ${chatId} not found`, 404);
+		}
+		return chat;
+	}
+
 	async mustHistory(historyId: string) {
 		const history = await this.db.query.tHistories.findFirst({ where: eq(schema.tHistories.id, historyId) });
 		if (!history) {
@@ -109,7 +117,18 @@ export class DAO {
 		return history;
 	}
 
-	async listHistories(chatId: string, history: { id: string; createdAt: Date }) {
+	async listHistories(chatId: string) {
+		return await this.db.query.tHistories.findMany({
+			where: and(eq(schema.tHistories.chatId, chatId)),
+			orderBy: [asc(schema.tHistories.createdAt)],
+		});
+	}
+
+	async deleteChat(chatId: string) {
+		await this.db.update(schema.tChats).set({ deletedAt: new Date() }).where(eq(schema.tChats.id, chatId));
+	}
+
+	async listHistoriesBefore(chatId: string, history: { id: string; createdAt: Date }) {
 		return await this.db.query.tHistories.findMany({
 			where: and(
 				eq(schema.tHistories.chatId, chatId),
@@ -394,7 +413,7 @@ export class DAO {
 		await this.db.update(schema.tHistories).set({ status }).where(eq(schema.tHistories.id, historyId));
 	}
 
-	async updateHistoryContent(historyId: string, content: string) {
+	async updateHistoryGeneratedContent(historyId: string, content: string) {
 		await this.db
 			.update(schema.tHistories)
 			.set({ status: schema.HISTORY_STATUS.GENERATED, content })
@@ -403,6 +422,52 @@ export class DAO {
 
 	async deleteSentences(documentId: string) {
 		await this.db.delete(schema.tSentences).where(eq(schema.tSentences.documentId, documentId));
+	}
+
+	async inputChat(
+		{
+			id,
+			teamId,
+			userId,
+		}: {
+			id: string;
+			teamId: string;
+			userId: string;
+		},
+		content: string
+	) {
+		const createdAt_1 = new Date();
+		const createdAt_2 = new Date(createdAt_1.getTime() + 50);
+
+		const assistantHistoryId = crypto.randomUUID();
+
+		await this.db
+			.insert(schema.tHistories)
+			.values([
+				{
+					id: crypto.randomUUID(),
+					teamId,
+					userId,
+					chatId: id,
+					createdAt: createdAt_1,
+					role: schema.HISTORY_ROLE.USER,
+					status: schema.HISTORY_STATUS.NONE,
+					content: content,
+				},
+				{
+					id: assistantHistoryId,
+					teamId,
+					userId,
+					chatId: id,
+					createdAt: createdAt_2,
+					role: schema.HISTORY_ROLE.ASSISTANT,
+					status: schema.HISTORY_STATUS.PENDING,
+					content: '',
+				},
+			])
+			.returning();
+
+		return { assistantHistoryId };
 	}
 
 	async createChat({
