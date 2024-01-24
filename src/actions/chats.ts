@@ -125,7 +125,7 @@ export const chat_delete: ActionHandler = async ({ env }, { chatId, userId }: { 
 
 export const chat_create: ActionHandler = async (
 	{ env },
-	{ teamId, userId, title, context, input }: { teamId: string; userId: string; title: string; context: string; input: string }
+	{ teamId, userId, title, context, content }: { teamId: string; userId: string; title: string; context: string; content: string }
 ) => {
 	const dao = new DAO(env);
 
@@ -133,7 +133,7 @@ export const chat_create: ActionHandler = async (
 
 	await dao.mustMembership(teamId, userId);
 
-	const { chat, assistantHistoryId } = await dao.createChat({ teamId, userId, title, context, input });
+	const { chat, assistantHistoryId } = await dao.createChat({ teamId, userId, title, context, content });
 
 	await env.QUEUE_MAIN_CHAT_GENERATION.send({ historyId: assistantHistoryId }, { contentType: 'json' });
 

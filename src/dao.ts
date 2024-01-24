@@ -475,13 +475,13 @@ export class DAO {
 		userId,
 		title,
 		context,
-		input,
+		content,
 	}: {
 		teamId: string;
 		userId: string;
 		title: string;
 		context: string;
-		input: string;
+		content: string;
 	}) {
 		let now = new Date();
 
@@ -550,7 +550,7 @@ export class DAO {
 					createdAt: createdAt_1,
 					role: schema.HISTORY_ROLE.USER,
 					status: schema.HISTORY_STATUS.NONE,
-					content: input,
+					content,
 				},
 				{
 					id: assistantHistoryId,
