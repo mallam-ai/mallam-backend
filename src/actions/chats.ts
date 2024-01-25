@@ -6,10 +6,15 @@ import { halt } from '../utils';
 
 const MODEL_GENERATION = '@cf/meta/llama-2-7b-chat-fp16';
 
-export const history_regenerate: ActionHandler = async ({ env }, { historyId }: { historyId: string }) => {
+export const history_regenerate: ActionHandler = async ({ env }, { historyId, userId }: { historyId: string; userId: string }) => {
 	const dao = new DAO(env);
 
 	const history = await dao.mustHistory(historyId);
+
+	if (history.userId !== userId) {
+		halt('You are not allowed to regenerate this history');
+		return;
+	}
 
 	if (history.status === schema.HISTORY_STATUS.GENERATING) {
 		return;
