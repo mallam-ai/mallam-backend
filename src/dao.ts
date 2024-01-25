@@ -516,7 +516,7 @@ export class DAO {
 						createdAt: createdAt_1,
 						role: schema.HISTORY_ROLE.SYSTEM,
 						status: schema.HISTORY_STATUS.NONE,
-						content: 'Context:\n' + context,
+						content: 'Context:\n\n' + context,
 					},
 					{
 						id: crypto.randomUUID(),
