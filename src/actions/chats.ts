@@ -1,7 +1,6 @@
 import { DAO } from '../dao';
 import * as schema from '../../schema-main';
 import { ActionHandler } from '../types';
-import { Ai } from '@cloudflare/ai';
 import { halt } from '../utils';
 
 const MODEL_GENERATION = '@cf/meta/llama-2-7b-chat-fp16';

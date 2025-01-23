@@ -2,7 +2,6 @@ import { ActionHandler } from '../types';
 import * as schema from '../../schema-main';
 import { invokeStanzaSentenceSegmentation } from '../utils';
 import { chunk, flatten } from 'lodash';
-import { Ai } from '@cloudflare/ai';
 import { DAO } from '../dao';
 
 const MODEL_EMBEDDINGS = '@cf/baai/bge-base-en-v1.5';
@@ -60,7 +59,7 @@ export const document_search: ActionHandler = async function (
 	const team = await dao.mustTeam(teamId);
 	await dao.mustMembership(team.id, userId);
 
-	const ai = new Ai(env.AI);
+	const ai = env.AI;
 	const { data } = await ai.run(MODEL_EMBEDDINGS, { text: [content] });
 	if (!data) {
 		throw new Error('Failed to search');
@@ -195,7 +194,7 @@ export const document_analysis: ActionHandler = async function (
 
 	// SEGMENTED -> ANALYZED
 	if (document.status === schema.DOCUMENT_STATUS.SEGMENTED) {
-		const ai = new Ai(env.AI);
+		const ai = env.AI;
 
 		await Promise.all(
 			sentences

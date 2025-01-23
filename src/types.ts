@@ -1,7 +1,7 @@
 export type Bindings = {
 	SECRET_KEY: string;
 
-	AI: any;
+	AI: Ai;
 
 	VECTORIZE_MAIN_SENTENCES: VectorizeIndex;
 
