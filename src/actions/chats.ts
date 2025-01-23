@@ -51,7 +51,7 @@ export const chat_input: ActionHandler = async (
 
 export const chat_generation: ActionHandler = async ({ env, ctx }, { historyId }: { historyId: string }) => {
 	const dao = new DAO(env);
-	const ai = new Ai(env.AI, { sessionOptions: { ctx } });
+	const ai = env.AI; //new Ai(env.AI, { sessionOptions: { ctx } });
 
 	const history = await dao.mustHistory(historyId);
 
@@ -60,10 +60,10 @@ export const chat_generation: ActionHandler = async ({ env, ctx }, { historyId }
 	const histories = await dao.listHistoriesBefore(history.chatId, history);
 
 	// use stream and convert to text to get a higher tokens limit
-	const stream: ReadableStream<Uint8Array> = await ai.run(MODEL_GENERATION, {
+	const stream = await ai.run(MODEL_GENERATION, {
 		messages: histories.map((h) => ({ role: h.role, content: h.content })),
 		stream: true,
-	});
+	}) as ReadableStream<Uint8Array>;
 	const response = new Response(stream, { headers: { 'Content-Type': 'text/event-stream' } });
 	const events = await response.text();
 

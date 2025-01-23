@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2023-12-01"
 routes = [{ pattern = "api.mallam.ai", custom_domain = true }]
 
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 [ai]
 binding = "AI"
 
