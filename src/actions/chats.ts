@@ -3,7 +3,7 @@ import * as schema from '../../schema-main';
 import { ActionHandler } from '../types';
 import { halt } from '../utils';
 
-const MODEL_GENERATION = '@cf/meta/llama-2-7b-chat-fp16';
+const MODEL_GENERATION = '@cf/deepseek-ai/deepseek-r1-distill-qwen-32b';
 
 export const history_regenerate: ActionHandler = async ({ env }, { historyId, userId }: { historyId: string; userId: string }) => {
 	const dao = new DAO(env);
